@@ -1,0 +1,28 @@
+#!/bin/bash
+
+META_REPO="/Users/sayanseksenbaev/Programming/go-project"
+
+git push origin main
+if [ $? -ne 0 ]; then
+    echo "Error: Push failed, skipping meta-repo update."
+    exit 1
+fi
+
+echo "Push successful, updating meta-repo..."
+
+cd "$META_REPO" || { echo "Error: Failed to cd into $META_REPO"; exit 1; }
+
+SUBMODULE_ABS_PATH=$(git rev-parse --show-toplevel)
+SUBMODULE_REL_PATH=${SUBMODULE_ABS_PATH#"$META_REPO/"}
+
+git add "$SUBMODULE_REL_PATH"
+
+if git diff --cached --quiet; then
+    echo "No changes to commit in meta-repo."
+    exit 0
+fi
+
+git commit -m "Auto-update submodule $SUBMODULE_REL_PATH"
+git push origin main
+
+echo "Meta-repo updated successfully."
