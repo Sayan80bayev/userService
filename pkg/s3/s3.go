@@ -7,9 +7,9 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"mime/multipart"
-	"postService/internal/config"
-	"postService/pkg/logging"
 	"strings"
+	"userService/internal/config"
+	"userService/pkg/logging"
 )
 
 var logger = logging.GetLogger()

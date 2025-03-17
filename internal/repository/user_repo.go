@@ -11,11 +11,7 @@ type UserRepository interface {
 
 	DeleteUserById(userId uint) error
 
+	GetAllUsers() ([]*models.User, error)
+
 	GetUserByUsername(username string) (*models.User, error)
-
-	SetRoleById(userId uint, role models.Role) error
-
-	BanUserById(userId uint) error
-
-	UnBanUserById(userId uint) error
 }

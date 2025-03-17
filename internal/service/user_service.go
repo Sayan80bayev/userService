@@ -1,10 +1,16 @@
 package service
 
-import "userService/internal/models"
+import (
+	"userService/internal/dto/request"
+	"userService/internal/models"
+)
 
 type UserService interface {
-	UpdateUser(user *models.User) error
+	UpdateUser(ur *request.UserRequest) error
+
 	DeleteUserById(userId uint) error
 
 	GetUserByUsername(username string) (*models.User, error)
+	
+	GetAllUsers() ([]*models.User, error)
 }

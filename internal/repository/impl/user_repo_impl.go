@@ -14,6 +14,12 @@ func NewUserRepository(db *gorm.DB) repository.UserRepository {
 	return &UserRepositoryImpl{db}
 }
 
+func (r *UserRepositoryImpl) GetAllUsers() ([]*models.User, error) {
+	var users []*models.User
+	err := r.db.Find(&users).Error
+	return users, err
+}
+
 func (r *UserRepositoryImpl) CreateUser(user *models.User) error {
 	return r.db.Create(user).Error
 }
@@ -24,18 +30,6 @@ func (r *UserRepositoryImpl) UpdateUser(user *models.User) error {
 
 func (r *UserRepositoryImpl) DeleteUserById(userId uint) error {
 	return r.db.Delete(&models.User{}, userId).Error
-}
-
-func (r *UserRepositoryImpl) SetRoleById(userId uint, role models.Role) error {
-	return r.db.Model(&models.User{}).Where("id = ?", userId).Update("role", role).Error
-}
-
-func (r *UserRepositoryImpl) BanUserById(userId uint) error {
-	return r.db.Model(&models.User{}).Where("id = ?", userId).Update("active", false).Error
-}
-
-func (r *UserRepositoryImpl) UnBanUserById(userId uint) error {
-	return r.db.Model(&models.User{}).Where("id = ?", userId).Update("active", true).Error
 }
 
 func (r *UserRepositoryImpl) GetUserByUsername(username string) (*models.User, error) {
