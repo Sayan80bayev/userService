@@ -4,8 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
-	"userService/internal/request"
 	"userService/internal/service"
+	"userService/internal/transfer/request"
 	"userService/pkg/logging"
 )
 

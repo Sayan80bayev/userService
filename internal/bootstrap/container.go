@@ -14,6 +14,7 @@ import (
 	"userService/pkg/logging"
 )
 
+// Container is a structure that contains all components for DI.
 type Container struct {
 	DB                 *gorm.DB
 	Redis              *redis.Client
@@ -25,6 +26,7 @@ type Container struct {
 	UserRepositoryImpl *repository.UserRepositoryImpl
 }
 
+// Init initializes container with components.
 func Init() (*Container, error) {
 	logger := logging.GetLogger()
 

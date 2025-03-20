@@ -10,7 +10,7 @@ type RedisService struct {
 	client *redis.Client
 }
 
-func NewCacheService(client *redis.Client) *RedisService {
+func NewRedisService(client *redis.Client) *RedisService {
 	return &RedisService{client: client}
 }
 

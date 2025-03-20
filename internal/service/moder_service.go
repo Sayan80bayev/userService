@@ -5,32 +5,29 @@ import (
 )
 
 type ModerRepository interface {
-	SetRoleById(userId uint, role model.Role) error
+	SetRoleById(userId int, role model.Role) error
 
-	BanUserById(userId uint) error
+	BanUserById(userId int) error
 
-	UnBanUserById(userId uint) error
+	UnBanUserById(userId int) error
 }
 
 type ModerService struct {
-	moderRepository ModerRepository
+	repo ModerRepository
 }
 
-func NewModerServiceImpl(moderRepository ModerRepository) *ModerService {
-	return &ModerService{moderRepository: moderRepository}
+func NewModerService(moderRepository ModerRepository) *ModerService {
+	return &ModerService{repo: moderRepository}
 }
 
-func (m *ModerService) SetRoleById(userId uint, role model.Role) error {
-	//TODO implement me
-	panic("implement me")
+func (m *ModerService) SetRoleById(userId int, role model.Role) error {
+	return m.repo.SetRoleById(userId, role)
 }
 
-func (m *ModerService) BanUserById(userId uint) error {
-	//TODO implement me
-	panic("implement me")
+func (m *ModerService) BanUserById(userId int) error {
+	return m.repo.BanUserById(userId)
 }
 
-func (m *ModerService) UnBanUserById(userId uint) error {
-	//TODO implement me
-	panic("implement me")
+func (m *ModerService) UnBanUserById(userId int) error {
+	return m.repo.UnBanUserById(userId)
 }

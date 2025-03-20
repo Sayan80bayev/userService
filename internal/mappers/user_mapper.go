@@ -2,7 +2,7 @@ package mappers
 
 import (
 	"userService/internal/model"
-	"userService/internal/response"
+	"userService/internal/transfer/response"
 	"userService/pkg/mapping"
 )
 
