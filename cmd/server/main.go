@@ -12,7 +12,7 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 	bs, err := bootstrap.Init()
 	if err != nil {
-		logger.Error("Couldn't init Bootstrap", err)
+		logger.Error("Couldn't init Container", err)
 	}
 
 	r := gin.New()

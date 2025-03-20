@@ -27,7 +27,7 @@ func (r *UserRepositoryImpl) UpdateUser(user *model.User) error {
 	return r.db.Save(user).Error
 }
 
-func (r *UserRepositoryImpl) DeleteUserById(userId uint) error {
+func (r *UserRepositoryImpl) DeleteUserById(userId int) error {
 	return r.db.Delete(&model.User{}, userId).Error
 }
 
@@ -43,14 +43,14 @@ func (r *UserRepositoryImpl) GetUserById(id int) (*model.User, error) {
 	return &user, err
 }
 
-func (r *UserRepositoryImpl) SetRoleById(userId uint, role model.Role) error {
+func (r *UserRepositoryImpl) SetRoleById(userId int, role model.Role) error {
 	return r.db.Model(&model.User{}).Where("id = ?", userId).Update("role", role).Error
 }
 
-func (r *UserRepositoryImpl) BanUserById(userId uint) error {
+func (r *UserRepositoryImpl) BanUserById(userId int) error {
 	return r.db.Model(&model.User{}).Where("id = ?", userId).Update("active", false).Error
 }
 
-func (r *UserRepositoryImpl) UnBanUserById(userId uint) error {
+func (r *UserRepositoryImpl) UnBanUserById(userId int) error {
 	return r.db.Model(&model.User{}).Where("id = ?", userId).Update("active", true).Error
 }

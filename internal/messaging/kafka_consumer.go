@@ -12,7 +12,7 @@ import (
 
 type CacheUserRepository interface {
 	GetUserByUsername(username string) (*model.User, error)
-	GetAllUsers() ([]*model.User, error)
+	GetAllUsers() ([]model.User, error)
 }
 
 type ConsumerConfig struct {

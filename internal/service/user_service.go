@@ -17,7 +17,7 @@ type UserRepository interface {
 
 	UpdateUser(user *model.User) error
 
-	DeleteUserById(userId uint) error
+	DeleteUserById(userId int) error
 
 	GetAllUsers() ([]model.User, error)
 
@@ -45,7 +45,7 @@ func NewUserService(
 	}
 }
 
-func (s *UserService) UpdateUser(ur *request.UserRequest, userID int) error {
+func (s *UserService) UpdateUser(ur request.UserRequest, userID int) error {
 	u, err := s.userRepo.GetUserById(userID)
 	if err != nil {
 		return err
@@ -65,24 +65,34 @@ func (s *UserService) UpdateUser(ur *request.UserRequest, userID int) error {
 
 	u.Username, u.DateOfBirth, u.About = ur.Username, dob, ur.About
 
-	err = s.producer.Produce("UserUpdate", events.UserUpdated{
+	err = s.userRepo.UpdateUser(u)
+	if err != nil {
+		logging.Instance.Error(err)
+		return err
+	}
+
+	return s.producer.Produce("UserUpdate", events.UserUpdated{
 		UserID:    userID,
 		OldURL:    oldURL,
 		AvatarURL: u.AvatarURL,
 	})
-	if err != nil {
-		logging.Instance.Error(err)
-	}
-
-	return s.userRepo.UpdateUser(u)
 }
 
-func (s *UserService) DeleteUserById(userId uint) error {
+func (s *UserService) DeleteUserById(userId int) error {
 	return s.userRepo.DeleteUserById(userId)
 }
 
 func (s *UserService) GetUserByUsername(username string) (*response.UserResponse, error) {
 	user, err := s.userRepo.GetUserByUsername(username)
+	if err != nil {
+		return nil, err
+	}
+	ur := s.mapper.Map(*user)
+	return &ur, nil
+}
+
+func (s *UserService) GetUserById(id int) (*response.UserResponse, error) {
+	user, err := s.userRepo.GetUserById(id)
 	if err != nil {
 		return nil, err
 	}
