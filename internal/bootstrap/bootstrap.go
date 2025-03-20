@@ -3,18 +3,17 @@ package bootstrap
 import (
 	"context"
 	"fmt"
-
 	"github.com/minio/minio-go/v7"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"userService/internal/pkg/storage"
 
 	"userService/internal/config"
 	"userService/internal/messaging"
-	"userService/internal/models"
+	"userService/internal/model"
 	"userService/internal/repository"
 	"userService/pkg/logging"
-	"userService/pkg/s3"
 )
 
 type Bootstrap struct {
@@ -47,9 +46,10 @@ func Init() (*Bootstrap, error) {
 		return nil, err
 	}
 
-	minioClient := s3.Init(cfg)
+	minioClient := storage.Init(cfg)
+	var fileService storage.FileService = storage.NewMinioStorage(minioClient, cfg)
 
-	producer, err := messaging.NewProducer("localhost:9092", "posts-events")
+	producer, err := messaging.NewKafkaProducer("localhost:9092", "posts-events")
 	if err != nil {
 		logger.Fatal("Error creating Kafka Producer:", err)
 		return nil, err
@@ -57,7 +57,7 @@ func Init() (*Bootstrap, error) {
 
 	repositories := initRepositories(db)
 
-	consumer, err := initKafkaConsumer(redisClient, minioClient, repositories["post"].(*repository.PostRepository))
+	consumer, err := initKafkaConsumer(redisClient, repositories["user"].(messaging.CacheUserRepository), fileService)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func initDatabase(cfg *config.Config) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	err = db.AutoMigrate(&models.Post{}, &models.Category{})
+	err = db.AutoMigrate(&model.User{})
 	if err != nil {
 		logger.Fatal("Database migration error:", err)
 		return nil, err
@@ -113,17 +113,21 @@ func initRedis(cfg *config.Config) (*redis.Client, error) {
 
 func initRepositories(db *gorm.DB) map[string]interface{} {
 	return map[string]interface{}{
-		"post":     repository.NewPostRepository(db),
-		"category": repository.NewCategoryRepository(db),
+		"user": repository.NewUserRepository(db),
 	}
 }
 
-func initKafkaConsumer(redisClient *redis.Client, minioClient *minio.Client, postRepo *repository.PostRepository) (*messaging.Consumer, error) {
-	consumer, err := messaging.NewConsumer(messaging.ConsumerConfig{
-		BootstrapServers: "localhost:9092",
-		GroupID:          "post-group",
-		Topics:           []string{"posts-events"},
-	}, redisClient, minioClient, postRepo)
+func initKafkaConsumer(redisClient *redis.Client, userRepo messaging.CacheUserRepository, fileService storage.FileService) (messaging.Consumer, error) {
+	consumer, err := messaging.NewConsumer(
+		messaging.ConsumerConfig{
+			BootstrapServers: "localhost:9092",
+			GroupID:          "post-group",
+			Topics:           []string{"posts-events"},
+		},
+		redisClient,
+		userRepo,
+		fileService,
+	)
 
 	if err != nil {
 		logging.GetLogger().Fatal("Error initializing Kafka Consumer:", err)

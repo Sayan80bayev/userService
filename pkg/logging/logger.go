@@ -49,23 +49,23 @@ func (f *CustomTextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 }
 
 var (
-	logInstance *logrus.Logger
-	once        sync.Once
+	Instance *logrus.Logger
+	once     sync.Once
 )
 
 func GetLogger() *logrus.Logger {
 	once.Do(func() {
-		logInstance = logrus.New()
-		logInstance.SetOutput(os.Stdout)
-		logInstance.SetFormatter(&CustomTextFormatter{})
+		Instance = logrus.New()
+		Instance.SetOutput(os.Stdout)
+		Instance.SetFormatter(&CustomTextFormatter{})
 	})
-	return logInstance
+	return Instance
 }
 
 func Middleware(c *gin.Context) {
 	methodColor := getMethodColor(c.Request.Method)
 
-	logInstance.WithFields(logrus.Fields{
+	Instance.WithFields(logrus.Fields{
 		"method": fmt.Sprintf("%s%s%s", methodColor, c.Request.Method, Reset),
 		"path":   c.Request.URL.Path,
 	}).Info("Incoming request")
@@ -75,7 +75,7 @@ func Middleware(c *gin.Context) {
 	statusCode := c.Writer.Status()
 	statusColor := getStatusColor(statusCode)
 
-	logInstance.WithFields(logrus.Fields{
+	Instance.WithFields(logrus.Fields{
 		"status": fmt.Sprintf("%s%d%s", statusColor, statusCode, Reset),
 		"method": fmt.Sprintf("%s%s%s", methodColor, c.Request.Method, Reset),
 		"path":   c.Request.URL.Path,
