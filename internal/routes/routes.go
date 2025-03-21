@@ -8,4 +8,5 @@ import (
 
 func SetupRoutes(r *gin.Engine, c *bootstrap.Container) {
 	SetupUserRoutes(r, c)
+	SetupModerRoutes(r, c)
 }

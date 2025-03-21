@@ -2,6 +2,7 @@ package service
 
 import (
 	"userService/internal/events"
+	"userService/internal/mappers"
 	"userService/internal/messaging"
 	"userService/internal/model"
 	"userService/internal/pkg/storage"
@@ -42,6 +43,7 @@ func NewUserService(
 		userRepo:    userRepo,
 		fileService: fileService,
 		producer:    producer,
+		mapper:      mappers.UserToUserResponse,
 	}
 }
 

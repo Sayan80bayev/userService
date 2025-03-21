@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"userService/internal/bootstrap"
 	"userService/internal/delivery"
+	"userService/internal/pkg/middleware"
 	"userService/internal/service"
 )
 
@@ -13,10 +14,14 @@ func SetupUserRoutes(r *gin.Engine, c *bootstrap.Container) {
 
 	routes := r.Group("api/v1/users")
 	{
-		routes.GET("/", h.GetAllUsers)
+		routes.GET("", h.GetAllUsers)
 		routes.GET("/:id", h.GetUserById)
-		routes.GET("/:username", h.GetUserByUsername)
-		routes.PUT("/:id", h.UpdateUser)
-		routes.DELETE("/:id", h.DeleteUser)
+		// routes.GET("/", h.GetUserByUsername)
+	}
+
+	authRoutes := r.Group("api/v1/users", middleware.AuthMiddleware(c.Config.JWTSecret))
+	{
+		authRoutes.PUT("/:id", h.UpdateUser)
+		authRoutes.DELETE("/:id", h.DeleteUser)
 	}
 }

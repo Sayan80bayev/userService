@@ -8,8 +8,8 @@ import (
 type UserResponse struct {
 	gorm.Model
 	Username    string    `json:"username"`
-	About       string    `json:"about:omitempty"`
+	About       string    `json:"about,omitempty"`
 	Active      bool      `json:"active"`
-	DateOfBirth time.Time `json:"date:omitempty"`
-	AvatarURL   string    `json:"avatar_url:omitempty"`
+	DateOfBirth time.Time `json:"date,omitempty"`
+	AvatarURL   string    `json:"avatar_url,omitempty"`
 }

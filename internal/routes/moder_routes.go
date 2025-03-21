@@ -14,9 +14,9 @@ func SetupModerRoutes(r *gin.Engine, c *bootstrap.Container) {
 
 	moderRoutes := r.Group("/api/v1/moder")
 	{
-		moderRoutes.PUT("/:id", h.SetRoleById)
-		moderRoutes.PUT("/:id", h.BanUserById)
-		moderRoutes.PUT("/:id", h.UnBanUserById)
+		moderRoutes.PUT("role/:id", h.SetRoleById)
+		moderRoutes.PUT("ban/:id", h.BanUserById)
+		moderRoutes.PUT("unban/:id", h.UnBanUserById)
 	}
 
 }

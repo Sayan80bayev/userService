@@ -21,14 +21,12 @@ type Config struct {
 	KafkaTopic   string   `mapstructure:"KAFKA_TOPIC"`
 }
 
-var logger = logging.GetLogger()
-
 func LoadConfig() (*Config, error) {
 	viper.SetConfigFile("config/config.yaml")
 	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {
-		logger.Error("Couldn't load config.yaml: %v", err)
+		logging.Instance.Errorf("Couldn't load config.yaml: %v", err)
 	}
 
 	var cfg Config
