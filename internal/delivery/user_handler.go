@@ -17,6 +17,20 @@ func NewUserHandler(userService *service.UserService) *UserHandler {
 	return &UserHandler{service: userService}
 }
 
+// UpdateUser обновляет информацию о пользователе
+// @Summary Обновление пользователя
+// @Description Позволяет обновить информацию о пользователе, включая аватар
+// @Tags users
+// @Accept multipart/form-data
+// @Produce json
+// @Param userId header string true "ID пользователя"
+// @Param avatar formData file false "Аватар пользователя"
+// @Param user body request.UserRequest true "Данные пользователя"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/v1/users [put]
 func (h *UserHandler) UpdateUser(ctx *gin.Context) {
 	userID, exists := ctx.Get("userId")
 	if !exists {
@@ -70,6 +84,16 @@ func (h *UserHandler) UpdateUser(ctx *gin.Context) {
 	})
 }
 
+// DeleteUser удаляет пользователя
+// @Summary Удаление пользователя
+// @Description Удаляет пользователя по ID
+// @Tags users
+// @Produce json
+// @Param userId header string true "ID пользователя"
+// @Success 200 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/v1/users [delete]
 func (h *UserHandler) DeleteUser(ctx *gin.Context) {
 	userID, exists := ctx.Get("userId")
 	if !exists {
@@ -99,6 +123,14 @@ func (h *UserHandler) DeleteUser(ctx *gin.Context) {
 	})
 }
 
+// GetAllUsers возвращает список всех пользователей
+// @Summary Получение всех пользователей
+// @Description Возвращает список всех пользователей
+// @Tags users
+// @Produce json
+// @Success 200 {array} model.User
+// @Failure 500 {object} map[string]string
+// @Router /api/v1/users [get]
 func (h *UserHandler) GetAllUsers(ctx *gin.Context) {
 	users, err := h.service.GetAllUsers()
 	if err != nil {
@@ -115,6 +147,15 @@ func (h *UserHandler) GetAllUsers(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, users)
 }
 
+// GetUserById получает пользователя по ID
+// @Summary Получение пользователя по ID
+// @Description Возвращает информацию о пользователе по его ID
+// @Tags users
+// @Produce json
+// @Param id path int true "ID пользователя"
+// @Success 200 {object} model.User
+// @Failure 400 {object} map[string]string
+// @Router /api/v1/users/{id} [get]
 func (h *UserHandler) GetUserById(ctx *gin.Context) {
 	userID := ctx.Param("id")
 	userIDInt, err := strconv.Atoi(userID)
@@ -142,6 +183,15 @@ func (h *UserHandler) GetUserById(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, user)
 }
 
+// GetUserByUsername получает пользователя по имени
+// @Summary Получение пользователя по имени
+// @Description Возвращает информацию о пользователе по его имени
+// @Tags users
+// @Produce json
+// @Param username query string true "Имя пользователя"
+// @Success 200 {object} model.User
+// @Failure 400 {object} map[string]string
+// @Router /api/v1/users/by-username [get]
 func (h *UserHandler) GetUserByUsername(ctx *gin.Context) {
 	username := ctx.Query("username")
 	user, err := h.service.GetUserByUsername(username)

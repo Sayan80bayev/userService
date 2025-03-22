@@ -10,15 +10,20 @@ type Config struct {
 	DatabaseURL string `mapstructure:"DATABASE_URL"`
 	Port        string `mapstructure:"PORT"`
 	JWTSecret   string `mapstructure:"JWT_SECRET"`
-	MinioBucket string `mapstructure:"MINIO_BUCKET"`
-	AccessKey   string `mapstructure:"ACCESS_KEY"`
-	SecretKey   string `mapstructure:"SECRET_KEY"`
+
+	AccessKey     string `mapstructure:"ACCESS_KEY"`
+	SecretKey     string `mapstructure:"SECRET_KEY"`
+	MinioBucket   string `mapstructure:"MINIO_BUCKET"`
+	MinioEndpoint string `mapstructure:"MINIO_ENDPOINT"`
 
 	RedisAddr string `mapstructure:"REDIS_ADDR"`
 	RedisPass string `mapstructure:"REDIS_PASS"`
 
-	KafkaBrokers []string `mapstructure:"KAFKA_BROKERS"`
-	KafkaTopic   string   `mapstructure:"KAFKA_TOPIC"`
+	KafkaBrokers        []string `mapstructure:"KAFKA_BROKERS"`
+	KafkaTopic          string   `mapstructure:"KAFKA_TOPIC"`
+	KafkaProducerTopic  string   `mapstructure:"KAFKA_PRODUCER_TOPIC"`
+	KafkaConsumerGroup  string   `mapstructure:"KAFKA_CONSUMER_GROUP"`
+	KafkaConsumerTopics []string `mapstructure:"KAFKA_CONSUMER_TOPICS"`
 }
 
 func LoadConfig() (*Config, error) {

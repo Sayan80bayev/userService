@@ -49,7 +49,7 @@ func Init() (*Container, error) {
 	minioClient := storage.Init(cfg)
 	fileService := storage.NewMinioStorage(minioClient, cfg)
 
-	producer, err := messaging.NewKafkaProducer("localhost:9092", "posts-events")
+	producer, err := messaging.NewKafkaProducer(cfg.KafkaBrokers[0], cfg.KafkaProducerTopic)
 	if err != nil {
 		logger.Fatal("Error creating Kafka Producer:", err)
 		return nil, err
@@ -57,7 +57,7 @@ func Init() (*Container, error) {
 
 	userRepo := repository.NewUserRepository(db)
 
-	consumer, err := initKafkaConsumer(redisClient, userRepo, fileService)
+	consumer, err := initKafkaConsumer(cfg, redisClient, userRepo, fileService)
 	if err != nil {
 		return nil, err
 	}
@@ -112,12 +112,12 @@ func initRedis(cfg *config.Config) (*redis.Client, error) {
 	return client, nil
 }
 
-func initKafkaConsumer(redisClient *redis.Client, userRepo messaging.CacheUserRepository, fileService storage.FileService) (messaging.Consumer, error) {
+func initKafkaConsumer(cfg *config.Config, redisClient *redis.Client, userRepo messaging.CacheUserRepository, fileService storage.FileService) (messaging.Consumer, error) {
 	consumer, err := messaging.NewConsumer(
 		messaging.ConsumerConfig{
-			BootstrapServers: "localhost:9092",
-			GroupID:          "post-group",
-			Topics:           []string{"posts-events"},
+			BootstrapServers: cfg.KafkaBrokers[0],
+			GroupID:          cfg.KafkaConsumerGroup,
+			Topics:           cfg.KafkaConsumerTopics,
 		},
 		redisClient,
 		userRepo,

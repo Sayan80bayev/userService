@@ -2,6 +2,9 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
+	_ "userService/docs"
 	"userService/internal/bootstrap"
 	"userService/internal/routes"
 	"userService/pkg/logging"
@@ -18,6 +21,7 @@ func main() {
 
 	r := gin.New()
 	r.Use(logging.Middleware)
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	routes.SetupRoutes(r, c)
 
 	logger.Info("Server starting on port 8080")

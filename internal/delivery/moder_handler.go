@@ -16,14 +16,13 @@ func NewModerHandler(ms *service.ModerService) *ModerHandler {
 	return &ModerHandler{ms: ms}
 }
 
+// SetRoleById sets the role for a user by ID.
+// @Tags moder
+// @Router /api/v1/moder/role/{id} [put]
 func (h *ModerHandler) SetRoleById(c *gin.Context) {
 	userID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status":  "error",
-			"code":    "BAD_REQUEST",
-			"message": "Invalid user ID",
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid user ID"})
 		return
 	}
 
@@ -31,83 +30,53 @@ func (h *ModerHandler) SetRoleById(c *gin.Context) {
 		RoleName string `json:"role_name" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status":  "error",
-			"code":    "BAD_REQUEST",
-			"message": "Invalid request body",
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid request body"})
 		return
 	}
 
 	err = h.ms.SetRoleById(userID, model.Role(req.RoleName))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "error",
-			"code":    "INTERNAL_ERROR",
-			"message": "Failed to set role",
-		})
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to set role"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"code":    "ROLE_UPDATED",
-		"message": "User role updated successfully",
-	})
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "User role updated successfully"})
 }
 
+// BanUserById bans a user by ID.
+// @Tags moder
+// @Router /api/v1/moder/ban/{id} [put]
 func (h *ModerHandler) BanUserById(c *gin.Context) {
 	userID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status":  "error",
-			"code":    "BAD_REQUEST",
-			"message": "Invalid user ID",
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid user ID"})
 		return
 	}
 
 	err = h.ms.BanUserById(userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "error",
-			"code":    "INTERNAL_ERROR",
-			"message": "Failed to ban user",
-		})
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to ban user"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"code":    "USER_BANNED",
-		"message": "User banned successfully",
-	})
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "User banned successfully"})
 }
 
+// UnBanUserById unbans a user by ID.
+// @Tags moder
+// @Router /api/v1/moder/unban/{id} [put]
 func (h *ModerHandler) UnBanUserById(c *gin.Context) {
 	userID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status":  "error",
-			"code":    "BAD_REQUEST",
-			"message": "Invalid user ID",
-		})
+		c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid user ID"})
 		return
 	}
 
 	err = h.ms.UnBanUserById(userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"status":  "error",
-			"code":    "INTERNAL_ERROR",
-			"message": "Failed to unban user",
-		})
+		c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to unban user"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"code":    "USER_UNBANNED",
-		"message": "User unbanned successfully",
-	})
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "User unbanned successfully"})
 }

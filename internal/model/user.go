@@ -6,7 +6,7 @@ import (
 )
 
 type User struct {
-	gorm.Model
+	gorm.Model  `swaggerignore:"true"`
 	Username    string `gorm:"unique"`
 	Password    string
 	About       string

@@ -15,13 +15,13 @@ import (
 var logger = logging.GetLogger()
 
 func Init(cfg *config.Config) *minio.Client {
-	endpoint := "localhost:9000"
-	minioClient, err := minio.New(endpoint, &minio.Options{
+	minioClient, err := minio.New(cfg.MinioEndpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(cfg.AccessKey, cfg.SecretKey, ""),
 		Secure: false,
 	})
 	if err != nil {
-		logger.Error(err)
+		logger.Error("Failed to initialize MinIO client:", err)
+		return nil
 	}
 	logger.Info("Successfully connected to MinIO")
 	return minioClient
@@ -46,20 +46,20 @@ func UploadFile(file multipart.File, header *multipart.FileHeader, cfg *config.C
 		minio.PutObjectOptions{ContentType: contentType},
 	)
 	if err != nil {
-		return "", errors.New("failed to upload file")
+		return "", fmt.Errorf("failed to upload file: %w", err)
 	}
 
-	fileURL := fmt.Sprintf("http://localhost:9000/%s/%s", bucketName, objectName)
+	fileURL := fmt.Sprintf("http://%s/%s/%s", cfg.MinioEndpoint, bucketName, objectName)
 
 	return fileURL, nil
 }
 
-func DeleteFileByURL(fileURL string, minioClient *minio.Client) error {
+func DeleteFileByURL(fileURL string, cfg *config.Config, minioClient *minio.Client) error {
 	if fileURL == "" {
 		return errors.New("missing file_url parameter")
 	}
 
-	prefix := "http://localhost:9000/"
+	prefix := fmt.Sprintf("http://%s/", cfg.MinioEndpoint)
 	if !strings.HasPrefix(fileURL, prefix) {
 		return errors.New("invalid file_url format")
 	}
@@ -70,12 +70,11 @@ func DeleteFileByURL(fileURL string, minioClient *minio.Client) error {
 		return errors.New("invalid file_url format")
 	}
 
-	bucketName := parts[0]
-	objectName := parts[1]
+	bucketName, objectName := parts[0], parts[1]
 
 	err := minioClient.RemoveObject(context.Background(), bucketName, objectName, minio.RemoveObjectOptions{})
 	if err != nil {
-		return errors.New("failed to delete file")
+		return fmt.Errorf("failed to delete file: %w", err)
 	}
 
 	return nil
@@ -95,5 +94,5 @@ func (s *MinioStorage) UploadFile(file multipart.File, header *multipart.FileHea
 }
 
 func (s *MinioStorage) DeleteFileByURL(fileURL string) error {
-	return DeleteFileByURL(fileURL, s.client)
+	return DeleteFileByURL(fileURL, s.cfg, s.client)
 }

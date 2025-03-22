@@ -1,0 +1,190 @@
+definitions:
+  model.User:
+    properties:
+      about:
+        type: string
+      active:
+        type: boolean
+      avatarURL:
+        type: string
+      dateOfBirth:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  request.UserRequest:
+    type: object
+info:
+  contact: {}
+paths:
+  /api/v1/moder/ban/{id}:
+    put:
+      responses: {}
+      tags:
+      - moder
+  /api/v1/moder/role/{id}:
+    put:
+      responses: {}
+      tags:
+      - moder
+  /api/v1/moder/unban/{id}:
+    put:
+      responses: {}
+      tags:
+      - moder
+  /api/v1/users:
+    delete:
+      description: Удаляет пользователя по ID
+      parameters:
+      - description: ID пользователя
+        in: header
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Удаление пользователя
+      tags:
+      - users
+    get:
+      description: Возвращает список всех пользователей
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.User'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получение всех пользователей
+      tags:
+      - users
+    put:
+      consumes:
+      - multipart/form-data
+      description: Позволяет обновить информацию о пользователе, включая аватар
+      parameters:
+      - description: ID пользователя
+        in: header
+        name: userId
+        required: true
+        type: string
+      - description: Аватар пользователя
+        in: formData
+        name: avatar
+        type: file
+      - description: Данные пользователя
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/request.UserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Обновление пользователя
+      tags:
+      - users
+  /api/v1/users/{id}:
+    get:
+      description: Возвращает информацию о пользователе по его ID
+      parameters:
+      - description: ID пользователя
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.User'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получение пользователя по ID
+      tags:
+      - users
+  /api/v1/users/by-username:
+    get:
+      description: Возвращает информацию о пользователе по его имени
+      parameters:
+      - description: Имя пользователя
+        in: query
+        name: username
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.User'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получение пользователя по имени
+      tags:
+      - users
+swagger: "2.0"
