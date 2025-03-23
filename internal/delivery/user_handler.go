@@ -32,7 +32,7 @@ func NewUserHandler(userService *service.UserService) *UserHandler {
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/users [put]
 func (h *UserHandler) UpdateUser(ctx *gin.Context) {
-	userID, exists := ctx.Get("userId")
+	userID, exists := ctx.Get("user_id")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "error",
@@ -95,7 +95,7 @@ func (h *UserHandler) UpdateUser(ctx *gin.Context) {
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/users [delete]
 func (h *UserHandler) DeleteUser(ctx *gin.Context) {
-	userID, exists := ctx.Get("userId")
+	userID, exists := ctx.Get("user_id")
 	if !exists {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "error",
@@ -183,15 +183,6 @@ func (h *UserHandler) GetUserById(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, user)
 }
 
-// GetUserByUsername получает пользователя по имени
-// @Summary Получение пользователя по имени
-// @Description Возвращает информацию о пользователе по его имени
-// @Tags users
-// @Produce json
-// @Param username query string true "Имя пользователя"
-// @Success 200 {object} model.User
-// @Failure 400 {object} map[string]string
-// @Router /api/v1/users/by-username [get]
 func (h *UserHandler) GetUserByUsername(ctx *gin.Context) {
 	username := ctx.Query("username")
 	user, err := h.service.GetUserByUsername(username)

@@ -40,7 +40,7 @@ func AuthMiddleware(jwtKey string) gin.HandlerFunc {
 			return
 		}
 		c.Set("user_role", model.Role(userRole))
-		c.Set("user_id", uint(userID))
+		c.Set("user_id", int(userID))
 		c.Set("user_active", userActive)
 		c.Next()
 	}

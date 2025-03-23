@@ -162,29 +162,4 @@ paths:
       summary: Получение пользователя по ID
       tags:
       - users
-  /api/v1/users/by-username:
-    get:
-      description: Возвращает информацию о пользователе по его имени
-      parameters:
-      - description: Имя пользователя
-        in: query
-        name: username
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/model.User'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Получение пользователя по имени
-      tags:
-      - users
 swagger: "2.0"
