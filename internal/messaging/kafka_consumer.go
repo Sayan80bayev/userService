@@ -71,7 +71,10 @@ func (c *KafkaConsumer) Start() {
 }
 
 func (c *KafkaConsumer) Close() {
-	c.consumer.Close()
+	err := c.consumer.Close()
+	if err != nil {
+		logger.Errorf("Could not close comsumer's connection gracefully: %v", err)
+	}
 }
 
 func (c *KafkaConsumer) handleMessage(msg *kafka.Message) {
@@ -84,10 +87,42 @@ func (c *KafkaConsumer) handleMessage(msg *kafka.Message) {
 
 	switch event.Type {
 	case "UserUpdated":
-		break
+		var e events.UserUpdated
+		if err := json.Unmarshal(event.Data, &e); err == nil {
+			c.handleUserUpdated(e)
+		}
 	case "UserDeleted":
-		break
+		var e events.UserDeleted
+		if err := json.Unmarshal(event.Data, &e); err == nil {
+			c.handleUserDeleted(e)
+		}
 	default:
 		logger.Warnf("Unknown event type: %s", event.Type)
 	}
+}
+
+func (c *KafkaConsumer) handleUserUpdated(e events.UserUpdated) {
+	//userID := e.UserID
+	avatarURL := e.AvatarURL
+	oldURL := e.OldURL
+
+	if oldURL != "" && oldURL != avatarURL {
+		err := c.fileService.DeleteFileByURL(oldURL)
+		if err != nil {
+			logger.Errorf("Error deleting old file on user update event: %v", err)
+		}
+	}
+
+	//TODO add synchronization db and cache
+}
+
+func (c *KafkaConsumer) handleUserDeleted(e events.UserDeleted) {
+	//userID := e.UserID
+	avatarURL := e.ImageURL
+
+	if err := c.fileService.DeleteFileByURL(avatarURL); err != nil {
+		logger.Errorf("Error deleting old file on user delete event: %v", err)
+	}
+
+	//TODO add synchronization db and cache
 }

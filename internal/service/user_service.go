@@ -8,9 +8,9 @@ import (
 	"userService/internal/pkg/storage"
 	"userService/internal/transfer/request"
 	"userService/internal/transfer/response"
+	"userService/pkg/date"
 	"userService/pkg/logging"
 	"userService/pkg/mapping"
-	"userService/pkg/utils"
 )
 
 type UserRepository interface {
@@ -60,7 +60,7 @@ func (s *UserService) UpdateUser(ur request.UserRequest, userID int) error {
 		}
 	}
 
-	dob, err := utils.ParseDate(ur.DateOfBirth)
+	dob, err := date.ParseDate(ur.DateOfBirth)
 	if err != nil {
 		return err
 	}
