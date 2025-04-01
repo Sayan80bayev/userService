@@ -1,6 +1,8 @@
 package service
 
 import (
+	"errors"
+	"golang.org/x/crypto/bcrypt"
 	"userService/internal/events"
 	"userService/internal/mappers"
 	"userService/internal/messaging"
@@ -91,6 +93,25 @@ func (s *UserService) GetUserByUsername(username string) (*response.UserResponse
 	}
 	ur := s.mapper.Map(*user)
 	return &ur, nil
+}
+
+func (s *UserService) ChangePassword(userId int, pr request.ChangePasswordRequest) error {
+	user, err := s.userRepo.GetUserById(userId)
+	if err != nil {
+		logging.Instance.Warn(err)
+		return errors.New("Could not find user. ")
+	}
+
+	if pr.ConfirmPassword != pr.NewPassword {
+		return errors.New("Passwords are not the same. ")
+	}
+
+	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(pr.OldPassword)); err != nil {
+		return errors.New("Invalid credentials. ")
+	}
+
+	user.Password = pr.NewPassword
+	return s.userRepo.UpdateUser(user)
 }
 
 func (s *UserService) GetUserById(id int) (*response.UserResponse, error) {

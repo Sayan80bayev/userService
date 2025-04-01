@@ -20,5 +20,3 @@
 - Moderation (Ban/Unban)
 - Setting roles
 - Deleting profile
-
-![img_2.png](img_2.png)

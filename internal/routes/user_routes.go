@@ -23,5 +23,6 @@ func SetupUserRoutes(r *gin.Engine, c *bootstrap.Container) {
 	{
 		authRoutes.PUT("/:id", h.UpdateUser)
 		authRoutes.DELETE("/:id", h.DeleteUser)
+		authRoutes.PATCH("/pwd/:id", h.ChangePassword)
 	}
 }
