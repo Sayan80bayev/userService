@@ -218,7 +218,7 @@ func (h *UserHandler) ChangePassword(c *gin.Context) {
 	}
 
 	var req request.ChangePasswordRequest
-	if err = c.ShouldBindJSON(req); err != nil {
+	if err = c.ShouldBindJSON(&req); err != nil {
 		c.JSON(400, "Could not bind request with json. ")
 		return
 	}
