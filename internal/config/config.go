@@ -1,20 +1,19 @@
 package config
 
 import (
-	"userService/pkg/logging"
-
+	"github.com/Sayan80bayev/go-project/pkg/logging"
 	"github.com/spf13/viper"
 )
 
 type Config struct {
 	DatabaseURL string `mapstructure:"DATABASE_URL"`
 	Port        string `mapstructure:"PORT"`
-	JWTSecret   string `mapstructure:"JWT_SECRET"`
 
-	AccessKey     string `mapstructure:"ACCESS_KEY"`
-	SecretKey     string `mapstructure:"SECRET_KEY"`
-	MinioBucket   string `mapstructure:"MINIO_BUCKET"`
-	MinioEndpoint string `mapstructure:"MINIO_ENDPOINT"`
+	AccessKey   string `mapstructure:"ACCESS_KEY"`
+	SecretKey   string `mapstructure:"SECRET_KEY"`
+	MinioBucket string `mapstructure:"MINIO_BUCKET"`
+	MinioHost   string `mapstructure:"MINIO_HOST"`
+	MinioPort   string `mapstructure:"MINIO_PORT"`
 
 	RedisAddr string `mapstructure:"REDIS_ADDR"`
 	RedisPass string `mapstructure:"REDIS_PASS"`
@@ -24,6 +23,8 @@ type Config struct {
 	KafkaProducerTopic  string   `mapstructure:"KAFKA_PRODUCER_TOPIC"`
 	KafkaConsumerGroup  string   `mapstructure:"KAFKA_CONSUMER_GROUP"`
 	KafkaConsumerTopics []string `mapstructure:"KAFKA_CONSUMER_TOPICS"`
+	KeycloakURL         string   `mapstructure:"KEYCLOAK_URL"`
+	KeycloakRealm       string   `mapstructure:"KEYCLOAK_REALM"`
 }
 
 func LoadConfig() (*Config, error) {

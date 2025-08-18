@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"sync"
+
 	"gorm.io/gorm"
 	"userService/internal/model"
 )
@@ -9,8 +11,17 @@ type UserRepositoryImpl struct {
 	db *gorm.DB
 }
 
+var (
+	instance *UserRepositoryImpl
+	once     sync.Once
+)
+
+// NewUserRepository returns a singleton instance of UserRepositoryImpl
 func NewUserRepository(db *gorm.DB) *UserRepositoryImpl {
-	return &UserRepositoryImpl{db}
+	once.Do(func() {
+		instance = &UserRepositoryImpl{db: db}
+	})
+	return instance
 }
 
 func (r *UserRepositoryImpl) GetAllUsers() ([]model.User, error) {
@@ -41,22 +52,4 @@ func (r *UserRepositoryImpl) GetUserById(id int) (*model.User, error) {
 	var user model.User
 	err := r.db.Where("id = ?", id).First(&user).Error
 	return &user, err
-}
-
-func (r *UserRepositoryImpl) GetRoleById(userId int) (model.Role, error) {
-	var role model.Role
-	err := r.db.Model(&model.User{}).Select("role").Where("id = ?", userId).Scan(&role).Error
-	return role, err
-}
-
-func (r *UserRepositoryImpl) SetRoleById(userId int, role model.Role) error {
-	return r.db.Model(&model.User{}).Where("id = ?", userId).Update("role", role).Error
-}
-
-func (r *UserRepositoryImpl) BanUserById(userId int) error {
-	return r.db.Model(&model.User{}).Where("id = ?", userId).Update("active", false).Error
-}
-
-func (r *UserRepositoryImpl) UnBanUserById(userId int) error {
-	return r.db.Model(&model.User{}).Where("id = ?", userId).Update("active", true).Error
 }

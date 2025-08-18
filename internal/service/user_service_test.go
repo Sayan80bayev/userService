@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"mime/multipart"
 	"testing"
@@ -159,60 +158,6 @@ func TestUserService_GetUserByUsername(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, "test", resp.Username)
-}
-
-func TestUserService_ChangePassword(t *testing.T) {
-	tests := []struct {
-		name          string
-		setupMocks    func(*MockUserRepository)
-		req           request.ChangePasswordRequest
-		userID        int
-		expectedError string
-	}{
-		{
-			name: "successful change",
-			setupMocks: func(repo *MockUserRepository) {
-				hashed, _ := bcrypt.GenerateFromPassword([]byte("old"), bcrypt.DefaultCost)
-				repo.On("GetUserById", 1).Return(&model.User{Password: string(hashed)}, nil)
-				repo.On("UpdateUser", mock.Anything).Return(nil)
-			},
-			req: request.ChangePasswordRequest{
-				OldPassword:     "old",
-				NewPassword:     "new",
-				ConfirmPassword: "new",
-			},
-			userID:        1,
-			expectedError: "",
-		},
-		{
-			name: "passwords not match",
-			setupMocks: func(repo *MockUserRepository) {
-				repo.On("GetUserById", 1).Return(&model.User{}, nil)
-			},
-			req: request.ChangePasswordRequest{
-				NewPassword:     "new",
-				ConfirmPassword: "different",
-			},
-			userID:        1,
-			expectedError: "Passwords are not the same. ",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			repo := new(MockUserRepository)
-			tt.setupMocks(repo)
-
-			svc := NewUserService(repo, nil, nil)
-			err := svc.ChangePassword(tt.userID, tt.req)
-
-			if tt.expectedError == "" {
-				assert.NoError(t, err)
-			} else {
-				assert.EqualError(t, err, tt.expectedError)
-			}
-		})
-	}
 }
 
 func TestUserService_GetUserById(t *testing.T) {

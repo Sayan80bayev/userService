@@ -1,18 +1,16 @@
 package service
 
 import (
-	"errors"
-	"golang.org/x/crypto/bcrypt"
+	"github.com/Sayan80bayev/go-project/pkg/date"
+	"github.com/Sayan80bayev/go-project/pkg/logging"
+	"github.com/Sayan80bayev/go-project/pkg/mapper"
+	"github.com/Sayan80bayev/go-project/pkg/messaging"
+	storage "github.com/Sayan80bayev/go-project/pkg/objectStorage"
 	"userService/internal/events"
 	"userService/internal/mappers"
-	"userService/internal/messaging"
 	"userService/internal/model"
-	"userService/internal/pkg/storage"
 	"userService/internal/transfer/request"
 	"userService/internal/transfer/response"
-	"userService/pkg/date"
-	"userService/pkg/logging"
-	"userService/pkg/mapping"
 )
 
 type UserRepository interface {
@@ -31,19 +29,19 @@ type UserRepository interface {
 
 type UserService struct {
 	userRepo    UserRepository
-	fileService storage.FileService
+	fileStorage storage.FileStorage
 	producer    messaging.Producer
-	mapper      mapping.MapFunc[model.User, response.UserResponse]
+	mapper      mapper.MapFunc[model.User, response.UserResponse]
 }
 
 func NewUserService(
 	userRepo UserRepository,
-	fileService storage.FileService,
+	fileStorage storage.FileStorage,
 	producer messaging.Producer,
 ) *UserService {
 	return &UserService{
 		userRepo:    userRepo,
-		fileService: fileService,
+		fileStorage: fileStorage,
 		producer:    producer,
 		mapper:      mappers.UserToUserResponse,
 	}
@@ -57,7 +55,7 @@ func (s *UserService) UpdateUser(ur request.UserRequest, userID int) error {
 
 	oldURL := u.AvatarURL
 	if ur.Avatar != nil && ur.Header != nil {
-		if u.AvatarURL, err = s.fileService.UploadFile(ur.Avatar, ur.Header); err != nil {
+		if u.AvatarURL, err = s.fileStorage.UploadFile(ur.Avatar, ur.Header); err != nil {
 			return err
 		}
 	}
@@ -93,25 +91,6 @@ func (s *UserService) GetUserByUsername(username string) (*response.UserResponse
 	}
 	ur := s.mapper.Map(*user)
 	return &ur, nil
-}
-
-func (s *UserService) ChangePassword(userId int, pr request.ChangePasswordRequest) error {
-	user, err := s.userRepo.GetUserById(userId)
-	if err != nil {
-		logging.Instance.Warn(err)
-		return errors.New("Could not find user. ")
-	}
-
-	if pr.ConfirmPassword != pr.NewPassword {
-		return errors.New("Passwords are not the same. ")
-	}
-
-	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(pr.OldPassword)); err != nil {
-		return errors.New("Invalid credentials. ")
-	}
-
-	user.Password = pr.NewPassword
-	return s.userRepo.UpdateUser(user)
 }
 
 func (s *UserService) GetUserById(id int) (*response.UserResponse, error) {

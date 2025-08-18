@@ -78,12 +78,12 @@
 === RUN   TestUserService_ChangePassword
 === RUN   TestUserService_ChangePassword/successful_change
 === RUN   TestUserService_ChangePassword/passwords_not_match
---- PASS: TestUserService_ChangePassword (0.11s)
-    --- PASS: TestUserService_ChangePassword/successful_change (0.11s)
+--- PASS: TestUserService_ChangePassword (0.13s)
+    --- PASS: TestUserService_ChangePassword/successful_change (0.13s)
     --- PASS: TestUserService_ChangePassword/passwords_not_match (0.00s)
 === RUN   TestUserService_GetUserById
 --- PASS: TestUserService_GetUserById (0.00s)
 === RUN   TestUserService_GetAllUsers
 --- PASS: TestUserService_GetAllUsers (0.00s)
 PASS
-ok  	userService/internal/service	1.863s
+ok  	userService/internal/service	1.122s

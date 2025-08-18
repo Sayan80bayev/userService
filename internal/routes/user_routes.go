@@ -1,15 +1,17 @@
 package routes
 
 import (
+	"github.com/Sayan80bayev/go-project/pkg/middleware"
 	"github.com/gin-gonic/gin"
 	"userService/internal/bootstrap"
 	"userService/internal/delivery"
-	"userService/internal/pkg/middleware"
+	"userService/internal/repository"
 	"userService/internal/service"
 )
 
 func SetupUserRoutes(r *gin.Engine, c *bootstrap.Container) {
-	s := service.NewUserService(c.UserRepositoryImpl, c.FileService, c.Producer)
+	repo := repository.NewUserRepository(c.DB)
+	s := service.NewUserService(repo, c.FileStorage, c.Producer)
 	h := delivery.NewUserHandler(s)
 
 	routes := r.Group("api/v1/users")
@@ -19,10 +21,9 @@ func SetupUserRoutes(r *gin.Engine, c *bootstrap.Container) {
 		// routes.GET("/", h.GetUserByUsername)
 	}
 
-	authRoutes := r.Group("api/v1/users", middleware.AuthMiddleware(c.Config.JWTSecret))
+	authRoutes := r.Group("api/v1/users", middleware.AuthMiddleware(c.JWKSUrl))
 	{
 		authRoutes.PUT("/:id", h.UpdateUser)
 		authRoutes.DELETE("/:id", h.DeleteUser)
-		authRoutes.PATCH("/pwd/:id", h.ChangePassword)
 	}
 }

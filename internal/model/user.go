@@ -7,8 +7,8 @@ import (
 
 type User struct {
 	gorm.Model  `swaggerignore:"true"`
+	Email       string `gorm:"unique"`
 	Username    string `gorm:"unique"`
-	Password    string
 	About       string
 	Active      bool `gorm:"default:true"`
 	DateOfBirth time.Time

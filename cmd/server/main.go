@@ -1,13 +1,13 @@
 package main
 
 import (
+	"github.com/Sayan80bayev/go-project/pkg/logging"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	_ "userService/docs"
 	"userService/internal/bootstrap"
 	"userService/internal/routes"
-	"userService/pkg/logging"
 )
 
 var logger = logging.GetLogger()

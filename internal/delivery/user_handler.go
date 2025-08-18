@@ -1,12 +1,12 @@
 package delivery
 
 import (
+	"github.com/Sayan80bayev/go-project/pkg/logging"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
 	"userService/internal/service"
 	"userService/internal/transfer/request"
-	"userService/pkg/logging"
 )
 
 type UserHandler struct {
@@ -197,35 +197,4 @@ func (h *UserHandler) GetUserByUsername(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, user)
-}
-
-func (h *UserHandler) ChangePassword(c *gin.Context) {
-	userId, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(400, "Could not get user id from params. ")
-		return
-	}
-
-	uidToken, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(400, "Could not get user id from token. ")
-		return
-	}
-
-	if userId != uidToken {
-		c.JSON(400, "You are not allowed to edit. ")
-		return
-	}
-
-	var req request.ChangePasswordRequest
-	if err = c.ShouldBindJSON(&req); err != nil {
-		c.JSON(400, "Could not bind request with json. ")
-		return
-	}
-
-	if err = h.service.ChangePassword(userId, req); err != nil {
-		c.JSON(500, "Could not change the password. ")
-	}
-
-	c.JSON(200, "Successfully changed the password")
 }
