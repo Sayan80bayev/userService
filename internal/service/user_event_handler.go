@@ -14,9 +14,9 @@ var logger = logging.GetLogger()
 // UserUpdatedHandler handles user update events
 func UserUpdatedHandler(fileStorage storage.FileStorage) func(data json.RawMessage) error {
 	return func(data json.RawMessage) error {
-		var e events.UserUpdated
+		var e events.UserUpdatedPayload
 		if err := json.Unmarshal(data, &e); err != nil {
-			return fmt.Errorf("failed to unmarshal UserUpdated: %w", err)
+			return fmt.Errorf("failed to unmarshal UserUpdatedPayload: %w", err)
 		}
 
 		if e.OldURL != "" && e.OldURL != e.AvatarURL {
@@ -31,9 +31,9 @@ func UserUpdatedHandler(fileStorage storage.FileStorage) func(data json.RawMessa
 // UserDeletedHandler handles user deletion events
 func UserDeletedHandler(fileStorage storage.FileStorage) func(data json.RawMessage) error {
 	return func(data json.RawMessage) error {
-		var e events.UserDeleted
+		var e events.UserDeletedPayload
 		if err := json.Unmarshal(data, &e); err != nil {
-			return fmt.Errorf("failed to unmarshal UserDeleted: %w", err)
+			return fmt.Errorf("failed to unmarshal UserDeletedPayload: %w", err)
 		}
 
 		if err := fileStorage.DeleteFileByURL(e.ImageURL); err != nil {

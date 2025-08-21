@@ -5,7 +5,7 @@ go 1.24.1
 toolchain go1.24.6
 
 require (
-	github.com/Sayan80bayev/go-project/pkg v0.0.0-20250817175707-08e2950f5771
+	github.com/Sayan80bayev/go-project/pkg v0.0.0-20250821121747-2bc9ce4d8a0b
 	github.com/gin-gonic/gin v1.10.0
 	github.com/minio/minio-go/v7 v7.0.90
 	github.com/redis/go-redis/v9 v9.7.3

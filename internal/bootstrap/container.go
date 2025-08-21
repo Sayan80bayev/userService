@@ -1,24 +1,24 @@
 package bootstrap
 
 import (
-	"context"
 	"fmt"
+	"github.com/Sayan80bayev/go-project/pkg/caching"
 	"github.com/Sayan80bayev/go-project/pkg/logging"
 	"github.com/Sayan80bayev/go-project/pkg/messaging"
 	storage "github.com/Sayan80bayev/go-project/pkg/objectStorage"
 	"github.com/minio/minio-go/v7"
-	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"userService/internal/config"
+	"userService/internal/events"
 	"userService/internal/model"
 	"userService/internal/service"
 )
 
-// Container is a structure that contains all components for DI.
+// Container holds all dependencies
 type Container struct {
 	DB          *gorm.DB
-	Redis       *redis.Client
+	Redis       caching.CacheService
 	Minio       *minio.Client
 	FileStorage storage.FileStorage
 	Producer    messaging.Producer
@@ -27,14 +27,13 @@ type Container struct {
 	JWKSUrl     string
 }
 
-// Init initializes container with components.
+// Init initializes all dependencies and returns a container
 func Init() (*Container, error) {
 	logger := logging.GetLogger()
 
 	cfg, err := config.LoadConfig()
 	if err != nil {
-		logger.Fatal("Error loading configuration:", err)
-		return nil, err
+		return nil, fmt.Errorf("failed to load config: %w", err)
 	}
 
 	db, err := initDatabase(cfg)
@@ -47,20 +46,14 @@ func Init() (*Container, error) {
 		return nil, err
 	}
 
-	minioCfg := &storage.MinioConfig{
-		Bucket:    cfg.MinioBucket,
-		Host:      cfg.MinioHost,
-		AccessKey: cfg.AccessKey,
-		SecretKey: cfg.SecretKey,
-		Port:      cfg.MinioPort,
+	fileStorage, err := initMinio(cfg)
+	if err != nil {
+		return nil, err
 	}
 
-	fileStorage := storage.GetMinioStorage(minioCfg)
-
-	producer, err := messaging.GetProducer(cfg.KafkaBrokers[0], cfg.KafkaProducerTopic)
+	producer, err := messaging.NewKafkaProducer(cfg.KafkaBrokers[0], cfg.KafkaProducerTopic)
 	if err != nil {
-		logger.Fatal("Error creating Kafka Producer:", err)
-		return nil, err
+		return nil, fmt.Errorf("failed to create Kafka producer: %w", err)
 	}
 
 	consumer, err := initKafkaConsumer(cfg, fileStorage)
@@ -68,9 +61,9 @@ func Init() (*Container, error) {
 		return nil, err
 	}
 
-	logger.Info("✅ Dependencies initialized successfully")
-
 	jwksURL := buildJWKSURL(cfg)
+
+	logger.Info("✅ Dependencies initialized successfully")
 
 	return &Container{
 		DB:          db,
@@ -83,59 +76,75 @@ func Init() (*Container, error) {
 	}, nil
 }
 
+// --- Helpers ---
+
 func initDatabase(cfg *config.Config) (*gorm.DB, error) {
 	logger := logging.GetLogger()
 
 	db, err := gorm.Open(postgres.Open(cfg.DatabaseURL), &gorm.Config{})
 	if err != nil {
-		logger.Fatal("Error connecting to the database:", err)
-		return nil, err
+		return nil, fmt.Errorf("db connection failed: %w", err)
 	}
 
-	err = db.AutoMigrate(&model.User{})
-	if err != nil {
-		logger.Fatal("Database migration error:", err)
-		return nil, err
+	if err = db.AutoMigrate(&model.User{}); err != nil {
+		return nil, fmt.Errorf("db migration failed: %w", err)
 	}
 
+	logger.Info("Postgres connected & migrated")
 	return db, nil
 }
 
-func initRedis(cfg *config.Config) (*redis.Client, error) {
+func initRedis(cfg *config.Config) (*caching.RedisService, error) {
 	logger := logging.GetLogger()
-
-	client := redis.NewClient(&redis.Options{
+	redisCache, err := caching.NewRedisService(caching.RedisConfig{
+		DB:       0,
 		Addr:     cfg.RedisAddr,
 		Password: cfg.RedisPass,
-		DB:       0,
 	})
 
-	ctx := context.Background()
-	if _, err := client.Ping(ctx).Result(); err != nil {
-		logger.Fatal("Error connecting to Redis:", err)
-		return nil, err
+	if err != nil {
+		return nil, fmt.Errorf("redis connection failed: %w", err)
 	}
 
-	return client, nil
+	logger.Info("Redis connected")
+	return redisCache, nil
+}
+
+func initMinio(cfg *config.Config) (storage.FileStorage, error) {
+	logger := logging.GetLogger()
+
+	minioCfg := &storage.MinioConfig{
+		Bucket:    cfg.MinioBucket,
+		Host:      cfg.MinioHost,
+		AccessKey: cfg.AccessKey,
+		SecretKey: cfg.SecretKey,
+		Port:      cfg.MinioPort,
+	}
+
+	fs, err := storage.NewMinioStorage(minioCfg)
+	if err != nil {
+		return nil, fmt.Errorf("minio init failed: %w", err)
+	}
+
+	logger.Infof("Minio connected: bucket=%s host=%s", cfg.MinioBucket, cfg.MinioHost)
+	return fs, nil
 }
 
 func initKafkaConsumer(cfg *config.Config, fileStorage storage.FileStorage) (messaging.Consumer, error) {
-	consumer, err := messaging.GetConsumer(
-		messaging.ConsumerConfig{
-			BootstrapServers: cfg.KafkaBrokers[0],
-			GroupID:          cfg.KafkaConsumerGroup,
-			Topics:           cfg.KafkaConsumerTopics,
-		},
-	)
-
+	consumer, err := messaging.NewKafkaConsumer(messaging.ConsumerConfig{
+		BootstrapServers: cfg.KafkaBrokers[0],
+		GroupID:          cfg.KafkaConsumerGroup,
+		Topics:           cfg.KafkaConsumerTopics,
+	})
 	if err != nil {
-		logging.GetLogger().Fatal("Error initializing Kafka Consumer:", err)
-		return nil, err
+		return nil, fmt.Errorf("kafka consumer init failed: %w", err)
 	}
 
-	consumer.RegisterHandler("UserUpdated", service.UserUpdatedHandler(fileStorage))
-	consumer.RegisterHandler("UserDeleted", service.UserDeletedHandler(fileStorage))
+	// Use typed event constants
+	consumer.RegisterHandler(events.UserUpdated, service.UserUpdatedHandler(fileStorage))
+	consumer.RegisterHandler(events.UserDeleted, service.UserDeletedHandler(fileStorage))
 
+	logging.GetLogger().Info("Kafka consumer initialized")
 	return consumer, nil
 }
 

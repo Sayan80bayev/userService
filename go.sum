@@ -7,6 +7,12 @@ github.com/MicahParks/keyfunc/v2 v2.1.0 h1:6ZXKb9Rp6qp1bDbJefnG7cTH8yMN1IC/4nf+G
 github.com/MicahParks/keyfunc/v2 v2.1.0/go.mod h1:rW42fi+xgLJ2FRRXAfNx9ZA8WpD4OeE/yHVMteCkw9k=
 github.com/Sayan80bayev/go-project/pkg v0.0.0-20250817175707-08e2950f5771 h1:Q2tR6mFY+J16+S2fIkLs7luar0PhiWlPm87rbuhCMBI=
 github.com/Sayan80bayev/go-project/pkg v0.0.0-20250817175707-08e2950f5771/go.mod h1:nwpYfBtmSNN4brFqp+cfDzp8fs2nln+gtRbiJwXKKQk=
+github.com/Sayan80bayev/go-project/pkg v0.0.0-20250819214113-fdd8ea7184f4 h1:hABH5dH8lNLneE+Woz9Wp1E5baa6fE8wHcVJehbm1NI=
+github.com/Sayan80bayev/go-project/pkg v0.0.0-20250819214113-fdd8ea7184f4/go.mod h1:nwpYfBtmSNN4brFqp+cfDzp8fs2nln+gtRbiJwXKKQk=
+github.com/Sayan80bayev/go-project/pkg v0.0.0-20250821120302-5818d613e045 h1:mJEIkU8kRvZdQf5J8JvUz5gnjdk9HhiUbU7+DOtYvxE=
+github.com/Sayan80bayev/go-project/pkg v0.0.0-20250821120302-5818d613e045/go.mod h1:nwpYfBtmSNN4brFqp+cfDzp8fs2nln+gtRbiJwXKKQk=
+github.com/Sayan80bayev/go-project/pkg v0.0.0-20250821121747-2bc9ce4d8a0b h1:lBMzGfxV1rqYeLb8F6dtOFBotAoegwYkgnncyR163Gw=
+github.com/Sayan80bayev/go-project/pkg v0.0.0-20250821121747-2bc9ce4d8a0b/go.mod h1:nwpYfBtmSNN4brFqp+cfDzp8fs2nln+gtRbiJwXKKQk=
 github.com/actgardner/gogen-avro/v10 v10.1.0/go.mod h1:o+ybmVjEa27AAr35FRqU98DJu1fXES56uXniYFv4yDA=
 github.com/actgardner/gogen-avro/v10 v10.2.1/go.mod h1:QUhjeHPchheYmMDni/Nx7VB0RsT/ee8YIgGY/xpEQgQ=
 github.com/actgardner/gogen-avro/v9 v9.1.0/go.mod h1:nyTj6wPqDJoxM3qdnjcLv+EnMDSDFqE0qDpva2QRmKc=

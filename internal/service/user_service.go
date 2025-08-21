@@ -73,7 +73,7 @@ func (s *UserService) UpdateUser(ur request.UserRequest, userID int) error {
 		return err
 	}
 
-	return s.producer.Produce("UserUpdate", events.UserUpdated{
+	return s.producer.Produce("UserUpdate", events.UserUpdatedPayload{
 		UserID:    userID,
 		OldURL:    oldURL,
 		AvatarURL: u.AvatarURL,

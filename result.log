@@ -5,66 +5,9 @@
 ?   	userService/internal/delivery	[no test files]
 ?   	userService/internal/events	[no test files]
 ?   	userService/internal/mappers	[no test files]
-?   	userService/internal/messaging	[no test files]
 ?   	userService/internal/model	[no test files]
-?   	userService/internal/pkg/middleware	[no test files]
-?   	userService/internal/pkg/storage	[no test files]
 ?   	userService/internal/repository	[no test files]
 ?   	userService/internal/routes	[no test files]
-?   	userService/internal/transfer/request	[no test files]
-?   	userService/internal/transfer/response	[no test files]
-?   	userService/pkg/date	[no test files]
-?   	userService/pkg/error/format	[no test files]
-?   	userService/pkg/logging	[no test files]
-?   	userService/pkg/mapping	[no test files]
-=== RUN   TestModerService_SetRoleById
-=== RUN   TestModerService_SetRoleById/Admin_can_set_moderator_role
-=== RUN   TestModerService_SetRoleById/Moderator_cannot_set_admin_role
-=== RUN   TestModerService_SetRoleById/Moderator_cannot_moderate_admin
-=== RUN   TestModerService_SetRoleById/User_cannot_moderate_anyone
-=== RUN   TestModerService_SetRoleById/Error_getting_target_role
---- PASS: TestModerService_SetRoleById (0.00s)
-    --- PASS: TestModerService_SetRoleById/Admin_can_set_moderator_role (0.00s)
-    --- PASS: TestModerService_SetRoleById/Moderator_cannot_set_admin_role (0.00s)
-    --- PASS: TestModerService_SetRoleById/Moderator_cannot_moderate_admin (0.00s)
-    --- PASS: TestModerService_SetRoleById/User_cannot_moderate_anyone (0.00s)
-    --- PASS: TestModerService_SetRoleById/Error_getting_target_role (0.00s)
-=== RUN   TestModerService_BanUserById
-=== RUN   TestModerService_BanUserById/Admin_can_ban_user
-=== RUN   TestModerService_BanUserById/Moderator_can_ban_user
-=== RUN   TestModerService_BanUserById/Moderator_cannot_ban_admin
-=== RUN   TestModerService_BanUserById/User_cannot_ban_anyone
-=== RUN   TestModerService_BanUserById/Error_getting_target_role
---- PASS: TestModerService_BanUserById (0.00s)
-    --- PASS: TestModerService_BanUserById/Admin_can_ban_user (0.00s)
-    --- PASS: TestModerService_BanUserById/Moderator_can_ban_user (0.00s)
-    --- PASS: TestModerService_BanUserById/Moderator_cannot_ban_admin (0.00s)
-    --- PASS: TestModerService_BanUserById/User_cannot_ban_anyone (0.00s)
-    --- PASS: TestModerService_BanUserById/Error_getting_target_role (0.00s)
-=== RUN   TestModerService_UnBanUserById
-=== RUN   TestModerService_UnBanUserById/Admin_can_unban_user
-=== RUN   TestModerService_UnBanUserById/Moderator_can_unban_user
-=== RUN   TestModerService_UnBanUserById/Moderator_cannot_unban_admin
-=== RUN   TestModerService_UnBanUserById/User_cannot_unban_anyone
-=== RUN   TestModerService_UnBanUserById/Error_getting_target_role
---- PASS: TestModerService_UnBanUserById (0.00s)
-    --- PASS: TestModerService_UnBanUserById/Admin_can_unban_user (0.00s)
-    --- PASS: TestModerService_UnBanUserById/Moderator_can_unban_user (0.00s)
-    --- PASS: TestModerService_UnBanUserById/Moderator_cannot_unban_admin (0.00s)
-    --- PASS: TestModerService_UnBanUserById/User_cannot_unban_anyone (0.00s)
-    --- PASS: TestModerService_UnBanUserById/Error_getting_target_role (0.00s)
-=== RUN   TestValidateModeration
-=== RUN   TestValidateModeration/Admin_can_moderate_moderator
-=== RUN   TestValidateModeration/Moderator_can_moderate_user
-=== RUN   TestValidateModeration/Moderator_cannot_moderate_admin
-=== RUN   TestValidateModeration/User_cannot_moderate_anyone
-=== RUN   TestValidateModeration/Error_getting_target_role
---- PASS: TestValidateModeration (0.00s)
-    --- PASS: TestValidateModeration/Admin_can_moderate_moderator (0.00s)
-    --- PASS: TestValidateModeration/Moderator_can_moderate_user (0.00s)
-    --- PASS: TestValidateModeration/Moderator_cannot_moderate_admin (0.00s)
-    --- PASS: TestValidateModeration/User_cannot_moderate_anyone (0.00s)
-    --- PASS: TestValidateModeration/Error_getting_target_role (0.00s)
 === RUN   TestUserService_UpdateUser
 === RUN   TestUserService_UpdateUser/successful_update
 === RUN   TestUserService_UpdateUser/error_uploading_file
@@ -75,15 +18,11 @@
 --- PASS: TestUserService_DeleteUserById (0.00s)
 === RUN   TestUserService_GetUserByUsername
 --- PASS: TestUserService_GetUserByUsername (0.00s)
-=== RUN   TestUserService_ChangePassword
-=== RUN   TestUserService_ChangePassword/successful_change
-=== RUN   TestUserService_ChangePassword/passwords_not_match
---- PASS: TestUserService_ChangePassword (0.13s)
-    --- PASS: TestUserService_ChangePassword/successful_change (0.13s)
-    --- PASS: TestUserService_ChangePassword/passwords_not_match (0.00s)
 === RUN   TestUserService_GetUserById
 --- PASS: TestUserService_GetUserById (0.00s)
 === RUN   TestUserService_GetAllUsers
 --- PASS: TestUserService_GetAllUsers (0.00s)
 PASS
-ok  	userService/internal/service	1.122s
+ok  	userService/internal/service	1.047s
+?   	userService/internal/transfer/request	[no test files]
+?   	userService/internal/transfer/response	[no test files]
