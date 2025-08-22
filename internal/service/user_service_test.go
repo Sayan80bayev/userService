@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -169,7 +170,7 @@ func TestUserService_GetUserById(t *testing.T) {
 	repo.On("GetUserById", 1).Return(user, nil)
 
 	svc := NewUserService(repo, nil, nil)
-	resp, err := svc.GetUserById(1)
+	resp, err := svc.GetUserById(context.Background(), 1)
 
 	assert.NoError(t, err)
 	assert.Equal(t, uint(1), resp.ID)

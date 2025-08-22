@@ -163,13 +163,13 @@ func (h *UserHandler) GetUserById(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
 			"code":    "BAD_REQUEST",
-			"message": "Could not get id",
+			"message": "Could not parse id",
 			"details": err.Error(),
 		})
 		return
 	}
 
-	user, err := h.service.GetUserById(userIDInt)
+	user, err := h.service.GetUserById(ctx.Request.Context(), userIDInt)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",

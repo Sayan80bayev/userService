@@ -23,6 +23,6 @@
 === RUN   TestUserService_GetAllUsers
 --- PASS: TestUserService_GetAllUsers (0.00s)
 PASS
-ok  	userService/internal/service	1.047s
+ok  	userService/internal/service	1.515s
 ?   	userService/internal/transfer/request	[no test files]
 ?   	userService/internal/transfer/response	[no test files]

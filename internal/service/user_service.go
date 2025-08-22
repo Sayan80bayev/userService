@@ -1,11 +1,16 @@
 package service
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/Sayan80bayev/go-project/pkg/caching"
 	"github.com/Sayan80bayev/go-project/pkg/date"
 	"github.com/Sayan80bayev/go-project/pkg/logging"
 	"github.com/Sayan80bayev/go-project/pkg/mapper"
 	"github.com/Sayan80bayev/go-project/pkg/messaging"
 	storage "github.com/Sayan80bayev/go-project/pkg/objectStorage"
+	"time"
 	"userService/internal/events"
 	"userService/internal/mappers"
 	"userService/internal/model"
@@ -28,6 +33,7 @@ type UserRepository interface {
 }
 
 type UserService struct {
+	cache       caching.CacheService
 	userRepo    UserRepository
 	fileStorage storage.FileStorage
 	producer    messaging.Producer
@@ -93,12 +99,32 @@ func (s *UserService) GetUserByUsername(username string) (*response.UserResponse
 	return &ur, nil
 }
 
-func (s *UserService) GetUserById(id int) (*response.UserResponse, error) {
+func (s *UserService) GetUserById(ctx context.Context, id int) (*response.UserResponse, error) {
+	cacheKey := fmt.Sprintf("user:%d", id)
+
+	// 1. Try cache first
+	if cached, err := s.cache.Get(ctx, cacheKey); err == nil && cached != "" {
+		var ur response.UserResponse
+		if err := json.Unmarshal([]byte(cached), &ur); err == nil {
+			return &ur, nil
+		}
+		// if unmarshal fails, fall through to DB
+	}
+
+	// 2. Cache miss → get from DB
 	user, err := s.userRepo.GetUserById(id)
 	if err != nil {
 		return nil, err
 	}
+
 	ur := s.mapper.Map(*user)
+
+	// 3. Store in cache with TTL (e.g. 10 minutes)
+	if data, err := json.Marshal(ur); err == nil {
+		_ = s.cache.Set(ctx, cacheKey, data, 10*time.Minute)
+	}
+
+	// 4. Return the user
 	return &ur, nil
 }
 
