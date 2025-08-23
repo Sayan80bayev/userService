@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	"fmt"
+	"userService/internal/model"
 
 	"github.com/Sayan80bayev/go-project/pkg/logging"
 	storage "github.com/Sayan80bayev/go-project/pkg/objectStorage"
@@ -10,6 +11,28 @@ import (
 )
 
 var logger = logging.GetLogger()
+
+func CreateUserHandler(repository UserRepository) func(data json.RawMessage) error {
+	return func(data json.RawMessage) error {
+		var e events.UserCreatedPayload
+		if err := json.Unmarshal(data, &e); err != nil {
+			return fmt.Errorf("failed to unmarshal UserCreatedPayload: %w", err)
+		}
+
+		user := &model.User{
+			ID:       e.UserID,
+			Username: e.Username,
+			Email:    e.Email,
+		}
+
+		err := repository.CreateUser(user)
+		if err != nil {
+			return fmt.Errorf("failed to create user: %w", err)
+		}
+
+		return nil
+	}
+}
 
 // UserUpdatedHandler handles user update events
 func UserUpdatedHandler(fileStorage storage.FileStorage) func(data json.RawMessage) error {

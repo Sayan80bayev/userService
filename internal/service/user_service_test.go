@@ -4,14 +4,53 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"gorm.io/gorm"
 	"mime/multipart"
 	"testing"
+	"time"
 	"userService/internal/model"
 	"userService/internal/transfer/request"
 )
+
+type MockCacheService struct {
+	mock.Mock
+}
+
+func (m *MockCacheService) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) error {
+	args := m.Called(ctx, key, value, expiration)
+	return args.Error(0)
+}
+
+func (m *MockCacheService) Get(ctx context.Context, key string) (string, error) {
+	args := m.Called(ctx, key)
+	return args.String(0), args.Error(1)
+}
+
+func (m *MockCacheService) Delete(ctx context.Context, key string) error {
+	args := m.Called(ctx, key)
+	return args.Error(0)
+}
+
+func (m *MockCacheService) Publish(ctx context.Context, channel, message string) error {
+	args := m.Called(ctx, channel, message)
+	return args.Error(0)
+}
+
+func (m *MockCacheService) Exists(ctx context.Context, key string) (bool, error) {
+	args := m.Called(ctx, key)
+	return args.Bool(0), args.Error(1)
+}
+
+func (m *MockCacheService) Subscribe(ctx context.Context, channel string) *redis.PubSub {
+	args := m.Called(ctx, channel)
+	if ps, ok := args.Get(0).(*redis.PubSub); ok {
+		return ps
+	}
+	return nil
+}
 
 type MockUserRepository struct {
 	mock.Mock
@@ -27,7 +66,7 @@ func (m *MockUserRepository) UpdateUser(user *model.User) error {
 	return args.Error(0)
 }
 
-func (m *MockUserRepository) DeleteUserById(userId int) error {
+func (m *MockUserRepository) DeleteUserById(userId uuid.UUID) error {
 	args := m.Called(userId)
 	return args.Error(0)
 }
@@ -42,7 +81,7 @@ func (m *MockUserRepository) GetUserByUsername(username string) (*model.User, er
 	return args.Get(0).(*model.User), args.Error(1)
 }
 
-func (m *MockUserRepository) GetUserById(id int) (*model.User, error) {
+func (m *MockUserRepository) GetUserById(id uuid.UUID) (*model.User, error) {
 	args := m.Called(id)
 	return args.Get(0).(*model.User), args.Error(1)
 }
@@ -79,18 +118,18 @@ func TestUserService_UpdateUser(t *testing.T) {
 		t.Fatalf("Failed to create mock file: %v", err)
 	}
 
+	userUUID := uuid.New()
 	tests := []struct {
 		name          string
 		setupMocks    func(*MockUserRepository, *MockFileService, *MockProducer)
 		req           request.UserRequest
-		userID        int
+		userID        uuid.UUID
 		expectedError string
 	}{
 		{
 			name: "successful update",
 			setupMocks: func(repo *MockUserRepository, fs *MockFileService, p *MockProducer) {
-				repo.On("GetUserById", 1).Return(&model.User{AvatarURL: "old.jpg"}, nil)
-				// Обратите внимание, что мок теперь принимает правильные типы
+				repo.On("GetUserById", userUUID).Return(&model.User{AvatarURL: "old.jpg"}, nil)
 				fs.On("UploadFile", mock.Anything, mock.Anything).Return("new.jpg", nil)
 				repo.On("UpdateUser", mock.Anything).Return(nil)
 				p.On("Produce", "UserUpdate", mock.Anything).Return(nil)
@@ -102,20 +141,20 @@ func TestUserService_UpdateUser(t *testing.T) {
 				DateOfBirth: "02.01.2004",
 				About:       "about",
 			},
-			userID:        1,
+			userID:        userUUID,
 			expectedError: "",
 		},
 		{
 			name: "error uploading file",
 			setupMocks: func(repo *MockUserRepository, fs *MockFileService, p *MockProducer) {
-				repo.On("GetUserById", 1).Return(&model.User{}, nil)
+				repo.On("GetUserById", userUUID).Return(&model.User{}, nil)
 				fs.On("UploadFile", mock.Anything, mock.Anything).Return("", errors.New("upload error"))
 			},
 			req: request.UserRequest{
 				Avatar: avatarFile,
 				Header: avatarHeader,
 			},
-			userID:        1,
+			userID:        userUUID,
 			expectedError: "upload error",
 		},
 	}
@@ -127,7 +166,7 @@ func TestUserService_UpdateUser(t *testing.T) {
 			p := new(MockProducer)
 			tt.setupMocks(repo, fs, p)
 
-			svc := NewUserService(repo, fs, p)
+			svc := NewUserService(repo, fs, p, nil)
 			err := svc.UpdateUser(tt.req, tt.userID)
 
 			if tt.expectedError == "" {
@@ -140,11 +179,12 @@ func TestUserService_UpdateUser(t *testing.T) {
 }
 
 func TestUserService_DeleteUserById(t *testing.T) {
+	userUUID := uuid.New()
 	repo := new(MockUserRepository)
-	repo.On("DeleteUserById", 1).Return(nil)
+	repo.On("DeleteUserById", userUUID).Return(nil)
 
-	svc := NewUserService(repo, nil, nil)
-	err := svc.DeleteUserById(1)
+	svc := NewUserService(repo, nil, nil, nil)
+	err := svc.DeleteUserById(userUUID)
 
 	assert.NoError(t, err)
 }
@@ -154,7 +194,7 @@ func TestUserService_GetUserByUsername(t *testing.T) {
 	user := &model.User{Username: "test"}
 	repo.On("GetUserByUsername", "test").Return(user, nil)
 
-	svc := NewUserService(repo, nil, nil)
+	svc := NewUserService(repo, nil, nil, nil)
 	resp, err := svc.GetUserByUsername("test")
 
 	assert.NoError(t, err)
@@ -162,43 +202,51 @@ func TestUserService_GetUserByUsername(t *testing.T) {
 }
 
 func TestUserService_GetUserById(t *testing.T) {
+	cache := new(MockCacheService)
+
+	cache.On("Get", mock.Anything, mock.Anything).Return("", errors.New("cache miss"))
+	cache.On("Set", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+	userUUID := uuid.New()
 	repo := new(MockUserRepository)
 	user := &model.User{
-		Model:    gorm.Model{ID: 1},
+		ID:       userUUID,
 		Username: "testuser",
 	}
-	repo.On("GetUserById", 1).Return(user, nil)
+	repo.On("GetUserById", userUUID).Return(user, nil)
 
-	svc := NewUserService(repo, nil, nil)
-	resp, err := svc.GetUserById(context.Background(), 1)
+	svc := NewUserService(repo, nil, nil, cache)
+	resp, err := svc.GetUserById(context.Background(), user.ID)
 
 	assert.NoError(t, err)
-	assert.Equal(t, uint(1), resp.ID)
+	assert.Equal(t, user.ID, resp.ID)
 	assert.Equal(t, "testuser", resp.Username)
 }
 
 func TestUserService_GetAllUsers(t *testing.T) {
+	userUUID1 := uuid.New()
+	userUUID2 := uuid.New()
 	repo := new(MockUserRepository)
 	users := []model.User{
 		{
-			Model:    gorm.Model{ID: 1},
+			ID:       userUUID1,
 			Username: "user1",
 		},
 		{
-			Model:    gorm.Model{ID: 2},
+			ID:       userUUID2,
 			Username: "user2",
 		},
 	}
 	repo.On("GetAllUsers").Return(users, nil)
 
-	svc := NewUserService(repo, nil, nil)
+	svc := NewUserService(repo, nil, nil, nil)
 	resp, err := svc.GetAllUsers()
 
 	assert.NoError(t, err)
 	assert.Len(t, resp, 2)
-	assert.Equal(t, uint(1), resp[0].ID)
+	assert.Equal(t, userUUID1, resp[0].ID)
 	assert.Equal(t, "user1", resp[0].Username)
-	assert.Equal(t, uint(2), resp[1].ID)
+	assert.Equal(t, userUUID2, resp[1].ID)
 	assert.Equal(t, "user2", resp[1].Username)
 }
 

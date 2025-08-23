@@ -7,9 +7,9 @@ import (
 	"github.com/Sayan80bayev/go-project/pkg/caching"
 	"github.com/Sayan80bayev/go-project/pkg/date"
 	"github.com/Sayan80bayev/go-project/pkg/logging"
-	"github.com/Sayan80bayev/go-project/pkg/mapper"
 	"github.com/Sayan80bayev/go-project/pkg/messaging"
 	storage "github.com/Sayan80bayev/go-project/pkg/objectStorage"
+	"github.com/google/uuid"
 	"time"
 	"userService/internal/events"
 	"userService/internal/mappers"
@@ -20,16 +20,11 @@ import (
 
 type UserRepository interface {
 	CreateUser(user *model.User) error
-
 	UpdateUser(user *model.User) error
-
-	DeleteUserById(userId int) error
-
+	DeleteUserById(userId uuid.UUID) error
 	GetAllUsers() ([]model.User, error)
-
 	GetUserByUsername(username string) (*model.User, error)
-
-	GetUserById(id int) (*model.User, error)
+	GetUserById(id uuid.UUID) (*model.User, error)
 }
 
 type UserService struct {
@@ -37,23 +32,25 @@ type UserService struct {
 	userRepo    UserRepository
 	fileStorage storage.FileStorage
 	producer    messaging.Producer
-	mapper      mapper.MapFunc[model.User, response.UserResponse]
+	mapper      *mappers.UserMapper
 }
 
 func NewUserService(
 	userRepo UserRepository,
 	fileStorage storage.FileStorage,
 	producer messaging.Producer,
+	cache caching.CacheService,
 ) *UserService {
 	return &UserService{
 		userRepo:    userRepo,
 		fileStorage: fileStorage,
 		producer:    producer,
-		mapper:      mappers.UserToUserResponse,
+		mapper:      mappers.NewUserMapper(),
+		cache:       cache,
 	}
 }
 
-func (s *UserService) UpdateUser(ur request.UserRequest, userID int) error {
+func (s *UserService) UpdateUser(ur request.UserRequest, userID uuid.UUID) error {
 	u, err := s.userRepo.GetUserById(userID)
 	if err != nil {
 		return err
@@ -86,7 +83,7 @@ func (s *UserService) UpdateUser(ur request.UserRequest, userID int) error {
 	})
 }
 
-func (s *UserService) DeleteUserById(userId int) error {
+func (s *UserService) DeleteUserById(userId uuid.UUID) error {
 	return s.userRepo.DeleteUserById(userId)
 }
 
@@ -99,8 +96,8 @@ func (s *UserService) GetUserByUsername(username string) (*response.UserResponse
 	return &ur, nil
 }
 
-func (s *UserService) GetUserById(ctx context.Context, id int) (*response.UserResponse, error) {
-	cacheKey := fmt.Sprintf("user:%d", id)
+func (s *UserService) GetUserById(ctx context.Context, id uuid.UUID) (*response.UserResponse, error) {
+	cacheKey := fmt.Sprintf("user:%s", id.String())
 
 	// 1. Try cache first
 	if cached, err := s.cache.Get(ctx, cacheKey); err == nil && cached != "" {

@@ -3,8 +3,8 @@ package delivery
 import (
 	"github.com/Sayan80bayev/go-project/pkg/logging"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"net/http"
-	"strconv"
 	"userService/internal/service"
 	"userService/internal/transfer/request"
 )
@@ -66,7 +66,7 @@ func (h *UserHandler) UpdateUser(ctx *gin.Context) {
 	}
 	ur.Avatar, ur.Header = avatar, header
 
-	err = h.service.UpdateUser(ur, userID.(int))
+	err = h.service.UpdateUser(ur, userID.(uuid.UUID))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -105,7 +105,7 @@ func (h *UserHandler) DeleteUser(ctx *gin.Context) {
 		return
 	}
 
-	err := h.service.DeleteUserById(userID.(int))
+	err := h.service.DeleteUserById(userID.(uuid.UUID))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -158,7 +158,7 @@ func (h *UserHandler) GetAllUsers(ctx *gin.Context) {
 // @Router /api/v1/users/{id} [get]
 func (h *UserHandler) GetUserById(ctx *gin.Context) {
 	userID := ctx.Param("id")
-	userIDInt, err := strconv.Atoi(userID)
+	userUUID, err := uuid.Parse(userID)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
@@ -169,7 +169,7 @@ func (h *UserHandler) GetUserById(ctx *gin.Context) {
 		return
 	}
 
-	user, err := h.service.GetUserById(ctx.Request.Context(), userIDInt)
+	user, err := h.service.GetUserById(ctx.Request.Context(), userUUID)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",

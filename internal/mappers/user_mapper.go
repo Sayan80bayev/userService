@@ -10,14 +10,24 @@ type UserMapper struct {
 	mapper.MapFunc[model.User, response.UserResponse]
 }
 
+func NewUserMapper() *UserMapper {
+	return &UserMapper{MapFunc: UserToUserResponse}
+}
+
 // UserToUserResponse maps a User to UserResponse
 var UserToUserResponse = mapper.MapFunc[model.User, response.UserResponse](func(u model.User) response.UserResponse {
 	return response.UserResponse{
-		Model:       u.Model, // Copies ID, CreatedAt, UpdatedAt, DeletedAt from gorm.Model
+		ID:          u.ID, // Copies ID, CreatedAt, UpdatedAt, DeletedAt from gorm.Model
 		Username:    u.Username,
 		About:       u.About,
-		Active:      u.Active,
 		DateOfBirth: u.DateOfBirth,
 		AvatarURL:   u.AvatarURL,
+		Email:       u.Email,
+		Socials:     u.Socials,
+		Gender:      u.Gender,
+		Location:    u.Location,
+		CreatedAt:   u.CreatedAt,
+		UpdatedAt:   u.UpdatedAt,
+		DeletedAt:   u.DeletedAt,
 	}
 })

@@ -5,13 +5,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"userService/internal/bootstrap"
 	"userService/internal/delivery"
-	"userService/internal/repository"
 	"userService/internal/service"
 )
 
 func SetupUserRoutes(r *gin.Engine, c *bootstrap.Container) {
-	repo := repository.NewUserRepository(c.DB)
-	s := service.NewUserService(repo, c.FileStorage, c.Producer)
+	repo := c.UserRepository
+	s := service.NewUserService(repo, c.FileStorage, c.Producer, c.Redis)
 	h := delivery.NewUserHandler(s)
 
 	routes := r.Group("api/v1/users")

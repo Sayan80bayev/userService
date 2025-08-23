@@ -1,30 +1,31 @@
 package bootstrap
 
 import (
+	"context"
 	"fmt"
 	"github.com/Sayan80bayev/go-project/pkg/caching"
 	"github.com/Sayan80bayev/go-project/pkg/logging"
 	"github.com/Sayan80bayev/go-project/pkg/messaging"
 	storage "github.com/Sayan80bayev/go-project/pkg/objectStorage"
-	"github.com/minio/minio-go/v7"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"time"
 	"userService/internal/config"
 	"userService/internal/events"
-	"userService/internal/model"
+	"userService/internal/repository"
 	"userService/internal/service"
 )
 
 // Container holds all dependencies
 type Container struct {
-	DB          *gorm.DB
-	Redis       caching.CacheService
-	Minio       *minio.Client
-	FileStorage storage.FileStorage
-	Producer    messaging.Producer
-	Consumer    messaging.Consumer
-	Config      *config.Config
-	JWKSUrl     string
+	DB             *mongo.Database
+	Redis          caching.CacheService
+	FileStorage    storage.FileStorage
+	Producer       messaging.Producer
+	Consumer       messaging.Consumer
+	UserRepository service.UserRepository
+	Config         *config.Config
+	JWKSUrl        string
 }
 
 // Init initializes all dependencies and returns a container
@@ -36,12 +37,12 @@ func Init() (*Container, error) {
 		return nil, fmt.Errorf("failed to load config: %w", err)
 	}
 
-	db, err := initDatabase(cfg)
+	db, err := initMongoDatabase(cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	redisClient, err := initRedis(cfg)
+	cacheService, err := initRedis(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +57,9 @@ func Init() (*Container, error) {
 		return nil, fmt.Errorf("failed to create Kafka producer: %w", err)
 	}
 
-	consumer, err := initKafkaConsumer(cfg, fileStorage)
+	userRepository := repository.NewUserRepository(db)
+
+	consumer, err := initKafkaConsumer(cfg, fileStorage, userRepository)
 	if err != nil {
 		return nil, err
 	}
@@ -66,32 +69,40 @@ func Init() (*Container, error) {
 	logger.Info("✅ Dependencies initialized successfully")
 
 	return &Container{
-		DB:          db,
-		Redis:       redisClient,
-		FileStorage: fileStorage,
-		Producer:    producer,
-		Consumer:    consumer,
-		Config:      cfg,
-		JWKSUrl:     jwksURL,
+		DB:             db,
+		Redis:          cacheService,
+		FileStorage:    fileStorage,
+		Producer:       producer,
+		Consumer:       consumer,
+		Config:         cfg,
+		JWKSUrl:        jwksURL,
+		UserRepository: userRepository,
 	}, nil
 }
 
 // --- Helpers ---
 
-func initDatabase(cfg *config.Config) (*gorm.DB, error) {
+func initMongoDatabase(cfg *config.Config) (*mongo.Database, error) {
 	logger := logging.GetLogger()
 
-	db, err := gorm.Open(postgres.Open(cfg.DatabaseURL), &gorm.Config{})
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	clientOpts := options.Client().ApplyURI(cfg.MongoURI)
+	client, err := mongo.Connect(ctx, clientOpts)
 	if err != nil {
-		return nil, fmt.Errorf("db connection failed: %w", err)
+		logger.Fatal("Error connecting to MongoDB:", err)
+		return nil, err
 	}
 
-	if err = db.AutoMigrate(&model.User{}); err != nil {
-		return nil, fmt.Errorf("db migration failed: %w", err)
+	if err := client.Ping(ctx, nil); err != nil {
+		logger.Fatal("MongoDB ping failed:", err)
+		return nil, err
 	}
 
-	logger.Info("Postgres connected & migrated")
-	return db, nil
+	logger.Info("Connected to MongoDB")
+
+	return client.Database(cfg.MongoDBName), nil
 }
 
 func initRedis(cfg *config.Config) (*caching.RedisService, error) {
@@ -130,7 +141,7 @@ func initMinio(cfg *config.Config) (storage.FileStorage, error) {
 	return fs, nil
 }
 
-func initKafkaConsumer(cfg *config.Config, fileStorage storage.FileStorage) (messaging.Consumer, error) {
+func initKafkaConsumer(cfg *config.Config, fileStorage storage.FileStorage, repo service.UserRepository) (messaging.Consumer, error) {
 	consumer, err := messaging.NewKafkaConsumer(messaging.ConsumerConfig{
 		BootstrapServers: cfg.KafkaBrokers[0],
 		GroupID:          cfg.KafkaConsumerGroup,
@@ -141,6 +152,7 @@ func initKafkaConsumer(cfg *config.Config, fileStorage storage.FileStorage) (mes
 	}
 
 	// Use typed event constants
+	consumer.RegisterHandler(events.UserCreated, service.CreateUserHandler(repo))
 	consumer.RegisterHandler(events.UserUpdated, service.UserUpdatedHandler(fileStorage))
 	consumer.RegisterHandler(events.UserDeleted, service.UserDeletedHandler(fileStorage))
 
