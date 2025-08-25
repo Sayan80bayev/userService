@@ -35,7 +35,6 @@ func (r *MongoUserRepository) CreateUser(user *model.User) error {
 	now := time.Now().UTC()
 	user.CreatedAt = now
 	user.UpdatedAt = now
-	user.DeletedAt = time.Time{} // ensure empty
 
 	_, err := r.collection.InsertOne(ctx, user)
 	if mongo.IsDuplicateKeyError(err) {
@@ -51,7 +50,10 @@ func (r *MongoUserRepository) UpdateUser(user *model.User) error {
 
 	user.UpdatedAt = time.Now().UTC()
 
-	filter := bson.M{"_id": user.ID, "deleted_at": bson.M{"$eq": time.Time{}}}
+	filter := bson.M{
+		"_id":        user.ID,
+		"deleted_at": bson.M{"$exists": false},
+	}
 	update := bson.M{"$set": bson.M{
 		"username":      user.Username,
 		"email":         user.Email,
@@ -79,8 +81,14 @@ func (r *MongoUserRepository) DeleteUserById(userId uuid.UUID) error {
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 	defer cancel()
 
-	filter := bson.M{"_id": userId, "deleted_at": bson.M{"$eq": time.Time{}}}
-	update := bson.M{"$set": bson.M{"deleted_at": time.Now().UTC()}}
+	filter := bson.M{
+		"_id":        userId,
+		"deleted_at": bson.M{"$exists": false},
+	}
+
+	update := bson.M{
+		"$set": bson.M{"deleted_at": time.Now().UTC()},
+	}
 
 	res, err := r.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
@@ -97,7 +105,7 @@ func (r *MongoUserRepository) GetAllUsers() ([]model.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 	defer cancel()
 
-	cur, err := r.collection.Find(ctx, bson.M{"deleted_at": bson.M{"$eq": time.Time{}}})
+	cur, err := r.collection.Find(ctx, bson.M{"deleted_at": bson.M{"$exists": false}})
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +126,7 @@ func (r *MongoUserRepository) GetUserByUsername(username string) (*model.User, e
 	var user model.User
 	err := r.collection.FindOne(ctx, bson.M{
 		"username":   username,
-		"deleted_at": bson.M{"$eq": time.Time{}},
+		"deleted_at": bson.M{"$exists": false},
 	}).Decode(&user)
 	if errors.Is(err, mongo.ErrNoDocuments) {
 		return nil, nil
@@ -133,8 +141,7 @@ func (r *MongoUserRepository) GetUserById(id uuid.UUID) (*model.User, error) {
 
 	var user model.User
 	err := r.collection.FindOne(ctx, bson.M{
-		"_id":        id,
-		"deleted_at": bson.M{"$eq": time.Time{}},
+		"_id": id,
 	}).Decode(&user)
 	if errors.Is(err, mongo.ErrNoDocuments) {
 		return nil, nil

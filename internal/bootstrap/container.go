@@ -67,6 +67,7 @@ func Init() (*Container, error) {
 	jwksURL := buildJWKSURL(cfg)
 
 	logger.Info("✅ Dependencies initialized successfully")
+	// Wait for shutdown signal
 
 	return &Container{
 		DB:             db,
@@ -156,7 +157,7 @@ func initKafkaConsumer(cfg *config.Config, fileStorage storage.FileStorage, repo
 	consumer.RegisterHandler(events.UserUpdated, service.UserUpdatedHandler(fileStorage))
 	consumer.RegisterHandler(events.UserDeleted, service.UserDeletedHandler(fileStorage))
 
-	logging.GetLogger().Info("Kafka consumer initialized")
+	logging.GetLogger().Infof("Kafka consumer initialized")
 	return consumer, nil
 }
 

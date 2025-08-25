@@ -30,6 +30,7 @@ func CreateUserHandler(repository UserRepository) func(data json.RawMessage) err
 			return fmt.Errorf("failed to create user: %w", err)
 		}
 
+		logger.Infof("Created user profile: %s", user)
 		return nil
 	}
 }

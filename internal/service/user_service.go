@@ -57,26 +57,42 @@ func (s *UserService) UpdateUser(ur request.UserRequest, userID uuid.UUID) error
 	}
 
 	oldURL := u.AvatarURL
+
+	// Avatar
 	if ur.Avatar != nil && ur.Header != nil {
 		if u.AvatarURL, err = s.fileStorage.UploadFile(ur.Avatar, ur.Header); err != nil {
 			return err
 		}
 	}
 
-	dob, err := date.ParseDate(ur.DateOfBirth)
-	if err != nil {
-		return err
+	// Mandatory → always update
+	// NOTE: you can not update email
+	//u.Email = ur.Email
+	u.Username = ur.Username
+
+	// Optional → empty string or missing means remove
+	u.About = ur.About
+
+	if ur.DateOfBirth == "" {
+		u.DateOfBirth = &time.Time{} // remove DOB
+	} else {
+		dob, err := date.ParseDate(ur.DateOfBirth)
+		if err != nil {
+			return err
+		}
+		u.DateOfBirth = &dob
 	}
 
-	u.Username, u.DateOfBirth, u.About = ur.Username, dob, ur.About
+	u.Gender = ur.Gender
+	u.Location = ur.Location
+	u.Socials = ur.Socials // if empty, means remove socials
 
-	err = s.userRepo.UpdateUser(u)
-	if err != nil {
+	if err := s.userRepo.UpdateUser(u); err != nil {
 		logging.Instance.Error(err)
 		return err
 	}
 
-	return s.producer.Produce("UserUpdate", events.UserUpdatedPayload{
+	return s.producer.Produce(events.UserUpdated, events.UserUpdatedPayload{
 		UserID:    userID,
 		OldURL:    oldURL,
 		AvatarURL: u.AvatarURL,
@@ -112,6 +128,9 @@ func (s *UserService) GetUserById(ctx context.Context, id uuid.UUID) (*response.
 	user, err := s.userRepo.GetUserById(id)
 	if err != nil {
 		return nil, err
+	}
+	if user == nil {
+		return nil, fmt.Errorf("user not found")
 	}
 
 	ur := s.mapper.Map(*user)

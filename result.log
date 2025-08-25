@@ -19,27 +19,10 @@
 === RUN   TestUserService_GetUserByUsername
 --- PASS: TestUserService_GetUserByUsername (0.00s)
 === RUN   TestUserService_GetUserById
---- FAIL: TestUserService_GetUserById (0.00s)
-panic: runtime error: invalid memory address or nil pointer dereference [recovered]
-	panic: runtime error: invalid memory address or nil pointer dereference
-[signal SIGSEGV: segmentation violation code=0x2 addr=0x28 pc=0x10263d770]
-
-goroutine 10 [running]:
-testing.tRunner.func1.2({0x102be2940, 0x102eece40})
-	/Users/sayanseksenbaev/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.24.6.darwin-arm64/src/testing/testing.go:1734 +0x1ac
-testing.tRunner.func1()
-	/Users/sayanseksenbaev/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.24.6.darwin-arm64/src/testing/testing.go:1737 +0x334
-panic({0x102be2940?, 0x102eece40?})
-	/Users/sayanseksenbaev/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.24.6.darwin-arm64/src/runtime/panic.go:792 +0x124
-userService/internal/service.(*UserService).GetUserById(0x14000067f10, {0x102c57cb8, 0x102f38f20}, 0x1)
-	/Users/sayanseksenbaev/Programming/go-project/services/userService/internal/service/user_service.go:106 +0x80
-userService/internal/service.TestUserService_GetUserById(0x1400022b180)
-	/Users/sayanseksenbaev/Programming/go-project/services/userService/internal/service/user_service_test.go:173 +0x14c
-testing.tRunner(0x1400022b180, 0x102c51710)
-	/Users/sayanseksenbaev/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.24.6.darwin-arm64/src/testing/testing.go:1792 +0xe4
-created by testing.(*T).Run in goroutine 1
-	/Users/sayanseksenbaev/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.24.6.darwin-arm64/src/testing/testing.go:1851 +0x374
-FAIL	userService/internal/service	0.260s
+--- PASS: TestUserService_GetUserById (0.00s)
+=== RUN   TestUserService_GetAllUsers
+--- PASS: TestUserService_GetAllUsers (0.00s)
+PASS
+ok  	userService/internal/service	1.268s
 ?   	userService/internal/transfer/request	[no test files]
 ?   	userService/internal/transfer/response	[no test files]
-FAIL

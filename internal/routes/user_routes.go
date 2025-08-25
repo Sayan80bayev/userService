@@ -22,7 +22,7 @@ func SetupUserRoutes(r *gin.Engine, c *bootstrap.Container) {
 
 	authRoutes := r.Group("api/v1/users", middleware.AuthMiddleware(c.JWKSUrl))
 	{
-		authRoutes.PUT("/:id", h.UpdateUser)
 		authRoutes.DELETE("/:id", h.DeleteUser)
+		authRoutes.PUT("/:id", h.UpdateUser)
 	}
 }

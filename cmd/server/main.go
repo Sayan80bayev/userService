@@ -25,10 +25,14 @@ func main() {
 	routes.SetupRoutes(r, c)
 
 	logger.Info("Server starting on port 8080")
+	go c.Consumer.Start()
+
 	err = r.Run(":" + c.Config.Port)
 	if err != nil {
 		logger.Errorf("Couldn't start server: %v", err)
 		return
 	}
+
+	defer c.Consumer.Close()
 
 }

@@ -37,6 +37,25 @@ func (h *UserHandler) UpdateUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusUnauthorized, gin.H{
 			"status":  "error",
 			"code":    "UNAUTHORIZED",
+			"message": "User ID not found in context",
+		})
+		return
+	}
+
+	userUUID, ok := userID.(uuid.UUID)
+	if !ok {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "error",
+			"code":    "UNAUTHORIZED",
+			"message": "Invalid user ID type",
+		})
+		return
+	}
+
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{
+			"status":  "error",
+			"code":    "UNAUTHORIZED",
 			"message": "You're unauthorized",
 		})
 		return
@@ -53,8 +72,12 @@ func (h *UserHandler) UpdateUser(ctx *gin.Context) {
 		return
 	}
 
+	// 👇 Make avatar truly optional
 	avatar, header, err := ctx.Request.FormFile("avatar")
-	if err != nil {
+	if err == nil {
+		ur.Avatar, ur.Header = avatar, header
+	} else if err != http.ErrMissingFile {
+		// Only treat unexpected errors as fatal
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"status":  "error",
 			"code":    "INVALID_INPUT",
@@ -64,10 +87,8 @@ func (h *UserHandler) UpdateUser(ctx *gin.Context) {
 		logging.Instance.Warn("Error on getting avatar", err.Error())
 		return
 	}
-	ur.Avatar, ur.Header = avatar, header
 
-	err = h.service.UpdateUser(ur, userID.(uuid.UUID))
-	if err != nil {
+	if err := h.service.UpdateUser(ur, userUUID); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
 			"code":    "SERVER_ERROR",
@@ -113,7 +134,7 @@ func (h *UserHandler) DeleteUser(ctx *gin.Context) {
 			"message": "Could not delete user",
 			"details": err.Error(),
 		})
-		logging.Instance.Warn("Error on deleting user", err)
+		logging.Instance.Warn("Error on deleting user ", err)
 		return
 	}
 
