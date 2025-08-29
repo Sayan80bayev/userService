@@ -11,9 +11,10 @@ type UserResponse struct {
 	UpdatedAt time.Time  `bson:"updated_at,omitempty" json:"updated_at" validate:"omitempty"`
 	DeletedAt *time.Time `bson:"deleted_at,omitempty" json:"deleted_at,omitempty" validate:"omitempty"`
 
-	Email    string `bson:"email" json:"email" validate:"required,email"`
-	Username string `bson:"username" json:"username" validate:"required,min=3,max=20"`
-	About    string `bson:"about,omitempty" json:"about,omitempty" validate:"omitempty,max=500"`
+	Email     string `bson:"email" json:"email" validate:"required,email"`
+	Firstname string `bson:"firstname" json:"firstname" validate:"required,min=3,max=20"`
+	Lastname  string `bson:"lastname" json:"lastname" validate:"required,min=3,max=20"`
+	About     string `bson:"about,omitempty" json:"about,omitempty" validate:"omitempty,max=500"`
 
 	DateOfBirth *time.Time `bson:"date_of_birth,omitempty" json:"date_of_birth,omitempty" validate:"omitempty,lte"`
 	AvatarURL   string     `bson:"avatar_url,omitempty" json:"avatar_url,omitempty" validate:"omitempty,url"`
@@ -21,5 +22,6 @@ type UserResponse struct {
 	Gender   string `bson:"gender,omitempty" json:"gender,omitempty" validate:"omitempty,oneof=male female other"`
 	Location string `bson:"location,omitempty" json:"location,omitempty" validate:"omitempty,max=100"`
 
-	Socials []string `bson:"socials,omitempty" json:"socials,omitempty" validate:"omitempty,dive,url"`
+	Socials         []string `bson:"socials,omitempty" json:"socials,omitempty" validate:"omitempty,dive,url"`
+	NeedsCompletion bool     `bson:"needs_completion" json:"needs_completion"`
 }

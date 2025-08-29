@@ -23,7 +23,6 @@ type UserRepository interface {
 	UpdateUser(user *model.User) error
 	DeleteUserById(userId uuid.UUID) error
 	GetAllUsers() ([]model.User, error)
-	GetUserByUsername(username string) (*model.User, error)
 	GetUserById(id uuid.UUID) (*model.User, error)
 }
 
@@ -68,7 +67,8 @@ func (s *UserService) UpdateUser(ur request.UserRequest, userID uuid.UUID) error
 	// Mandatory → always update
 	// NOTE: you can not update email
 	//u.Email = ur.Email
-	u.Username = ur.Username
+	u.Lastname = ur.Lastname
+	u.Firstname = ur.Firstname
 
 	// Optional → empty string or missing means remove
 	u.About = ur.About
@@ -101,15 +101,6 @@ func (s *UserService) UpdateUser(ur request.UserRequest, userID uuid.UUID) error
 
 func (s *UserService) DeleteUserById(userId uuid.UUID) error {
 	return s.userRepo.DeleteUserById(userId)
-}
-
-func (s *UserService) GetUserByUsername(username string) (*response.UserResponse, error) {
-	user, err := s.userRepo.GetUserByUsername(username)
-	if err != nil {
-		return nil, err
-	}
-	ur := s.mapper.Map(*user)
-	return &ur, nil
 }
 
 func (s *UserService) GetUserById(ctx context.Context, id uuid.UUID) (*response.UserResponse, error) {

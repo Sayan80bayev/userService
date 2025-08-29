@@ -11,6 +11,7 @@ import (
 	"mime/multipart"
 	"testing"
 	"time"
+	"userService/internal/events"
 	"userService/internal/model"
 	"userService/internal/transfer/request"
 )
@@ -76,11 +77,6 @@ func (m *MockUserRepository) GetAllUsers() ([]model.User, error) {
 	return args.Get(0).([]model.User), args.Error(1)
 }
 
-func (m *MockUserRepository) GetUserByUsername(username string) (*model.User, error) {
-	args := m.Called(username)
-	return args.Get(0).(*model.User), args.Error(1)
-}
-
 func (m *MockUserRepository) GetUserById(id uuid.UUID) (*model.User, error) {
 	args := m.Called(id)
 	return args.Get(0).(*model.User), args.Error(1)
@@ -132,12 +128,13 @@ func TestUserService_UpdateUser(t *testing.T) {
 				repo.On("GetUserById", userUUID).Return(&model.User{AvatarURL: "old.jpg"}, nil)
 				fs.On("UploadFile", mock.Anything, mock.Anything).Return("new.jpg", nil)
 				repo.On("UpdateUser", mock.Anything).Return(nil)
-				p.On("Produce", "UserUpdate", mock.Anything).Return(nil)
+				p.On("Produce", events.UserUpdated, mock.Anything).Return(nil)
 			},
 			req: request.UserRequest{
 				Avatar:      avatarFile,
 				Header:      avatarHeader,
-				Username:    "newuser",
+				Firstname:   "newfirstname",
+				Lastname:    "newlastname",
 				DateOfBirth: "02.01.2004",
 				About:       "about",
 			},
@@ -189,18 +186,6 @@ func TestUserService_DeleteUserById(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestUserService_GetUserByUsername(t *testing.T) {
-	repo := new(MockUserRepository)
-	user := &model.User{Username: "test"}
-	repo.On("GetUserByUsername", "test").Return(user, nil)
-
-	svc := NewUserService(repo, nil, nil, nil)
-	resp, err := svc.GetUserByUsername("test")
-
-	assert.NoError(t, err)
-	assert.Equal(t, "test", resp.Username)
-}
-
 func TestUserService_GetUserById(t *testing.T) {
 	cache := new(MockCacheService)
 
@@ -210,8 +195,8 @@ func TestUserService_GetUserById(t *testing.T) {
 	userUUID := uuid.New()
 	repo := new(MockUserRepository)
 	user := &model.User{
-		ID:       userUUID,
-		Username: "testuser",
+		ID:        userUUID,
+		Firstname: "testuser",
 	}
 	repo.On("GetUserById", userUUID).Return(user, nil)
 
@@ -220,7 +205,7 @@ func TestUserService_GetUserById(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, user.ID, resp.ID)
-	assert.Equal(t, "testuser", resp.Username)
+	assert.Equal(t, "testuser", resp.Firstname)
 }
 
 func TestUserService_GetAllUsers(t *testing.T) {
@@ -229,12 +214,12 @@ func TestUserService_GetAllUsers(t *testing.T) {
 	repo := new(MockUserRepository)
 	users := []model.User{
 		{
-			ID:       userUUID1,
-			Username: "user1",
+			ID:        userUUID1,
+			Firstname: "user1",
 		},
 		{
-			ID:       userUUID2,
-			Username: "user2",
+			ID:        userUUID2,
+			Firstname: "user2",
 		},
 	}
 	repo.On("GetAllUsers").Return(users, nil)
@@ -245,9 +230,9 @@ func TestUserService_GetAllUsers(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, resp, 2)
 	assert.Equal(t, userUUID1, resp[0].ID)
-	assert.Equal(t, "user1", resp[0].Username)
+	assert.Equal(t, "user1", resp[0].Firstname)
 	assert.Equal(t, userUUID2, resp[1].ID)
-	assert.Equal(t, "user2", resp[1].Username)
+	assert.Equal(t, "user2", resp[1].Firstname)
 }
 
 type mockMultipartFile struct {

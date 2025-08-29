@@ -17,17 +17,19 @@ func NewUserMapper() *UserMapper {
 // UserToUserResponse maps a User to UserResponse
 var UserToUserResponse = mapper.MapFunc[model.User, response.UserResponse](func(u model.User) response.UserResponse {
 	return response.UserResponse{
-		ID:          u.ID, // Copies ID, CreatedAt, UpdatedAt, DeletedAt from gorm.Model
-		Username:    u.Username,
-		About:       u.About,
-		DateOfBirth: u.DateOfBirth,
-		AvatarURL:   u.AvatarURL,
-		Email:       u.Email,
-		Socials:     u.Socials,
-		Gender:      u.Gender,
-		Location:    u.Location,
-		CreatedAt:   u.CreatedAt,
-		UpdatedAt:   u.UpdatedAt,
-		DeletedAt:   u.DeletedAt,
+		ID:              u.ID, // Copies ID, CreatedAt, UpdatedAt, DeletedAt from gorm.Model
+		Firstname:       u.Firstname,
+		Lastname:        u.Lastname,
+		About:           u.About,
+		DateOfBirth:     u.DateOfBirth,
+		AvatarURL:       u.AvatarURL,
+		Email:           u.Email,
+		Socials:         u.Socials,
+		Gender:          u.Gender,
+		Location:        u.Location,
+		CreatedAt:       u.CreatedAt,
+		UpdatedAt:       u.UpdatedAt,
+		DeletedAt:       u.DeletedAt,
+		NeedsCompletion: u.NeedsCompletion,
 	}
 })

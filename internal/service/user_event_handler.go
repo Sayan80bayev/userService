@@ -19,18 +19,24 @@ func CreateUserHandler(repository UserRepository) func(data json.RawMessage) err
 			return fmt.Errorf("failed to unmarshal UserCreatedPayload: %w", err)
 		}
 
-		user := &model.User{
-			ID:       e.UserID,
-			Username: e.Username,
-			Email:    e.Email,
+		needsCompletion := false
+		if e.Firstname == "" || e.Lastname == "" {
+			needsCompletion = true
 		}
 
-		err := repository.CreateUser(user)
-		if err != nil {
+		user := &model.User{
+			ID:              e.UserID,
+			Firstname:       e.Firstname,
+			Lastname:        e.Lastname,
+			Email:           e.Email,
+			NeedsCompletion: needsCompletion,
+		}
+
+		if err := repository.CreateUser(user); err != nil {
 			return fmt.Errorf("failed to create user: %w", err)
 		}
 
-		logger.Infof("Created user profile: %s", user)
+		logger.Infof("Created user profile: %+v", user)
 		return nil
 	}
 }

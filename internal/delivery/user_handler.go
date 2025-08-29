@@ -203,19 +203,3 @@ func (h *UserHandler) GetUserById(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, user)
 }
-
-func (h *UserHandler) GetUserByUsername(ctx *gin.Context) {
-	username := ctx.Query("username")
-	user, err := h.service.GetUserByUsername(username)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"status":  "error",
-			"code":    "BAD_REQUEST",
-			"message": "Could not get user",
-			"details": err.Error(),
-		})
-		return
-	}
-
-	ctx.JSON(http.StatusOK, user)
-}

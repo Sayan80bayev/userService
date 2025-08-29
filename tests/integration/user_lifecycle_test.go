@@ -35,9 +35,10 @@ func TestUserLifecycle(t *testing.T) {
 
 	// --- Step 1: Produce "UserCreated" Kafka event ---
 	payload := events.UserCreatedPayload{
-		UserID:   userID,
-		Username: "sayan123",
-		Email:    "sayan123serv@gmail.com",
+		UserID:    userID,
+		Firstname: "Sayan",
+		Lastname:  "Seksenbayev",
+		Email:     "sayan123serv@gmail.com",
 	}
 
 	err := container.Producer.Produce(events.UserCreated, payload)
@@ -53,7 +54,7 @@ func TestUserLifecycle(t *testing.T) {
 	})
 
 	fmt.Printf("Waiting for user to become active %d seconds\n", 5)
-	time.Sleep(10 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	// --- Step 3: Fetch created user ---
 	w := doRequest(t, http.MethodGet, fmt.Sprintf("/api/v1/users/%s", userID.String()), nil, nil)
@@ -65,7 +66,8 @@ func TestUserLifecycle(t *testing.T) {
 	writer := multipart.NewWriter(body)
 
 	// Mandatory fields
-	_ = writer.WriteField("username", "integration_tester")
+	_ = writer.WriteField("firstname", "integration_tester")
+	_ = writer.WriteField("lastname", "integration_tester")
 	_ = writer.WriteField("email", "sayan123serv@gmail.com")
 
 	// Optional fields
@@ -110,4 +112,40 @@ func TestUserLifecycle(t *testing.T) {
 	err = json.Unmarshal(w.Body.Bytes(), &resp)
 	require.NoError(t, err, "failed to unmarshal response")
 
+}
+
+func TestUserLifecycle_NeedsCompletion(t *testing.T) {
+	logger := logging.GetLogger()
+	userID := uuid.New()
+	payload := events.UserCreatedPayload{
+		UserID: userID,
+		Email:  "sayan123serv@gmail.com",
+	}
+
+	err := container.Producer.Produce(events.UserCreated, payload)
+	require.NoError(t, err, "failed to produce user.created event")
+
+	// --- Step 2: Run consumer in goroutine ---
+	go container.Consumer.Start()
+
+	// Always close the consumer after the test ends
+	t.Cleanup(func() {
+		logger.Info("Shutting down consumer...")
+		container.Consumer.Close()
+	})
+
+	fmt.Printf("Waiting for user to become active %d seconds\n", 5)
+	time.Sleep(5 * time.Second)
+
+	w := doRequest(t, http.MethodGet, "/api/v1/users/"+userID.String(), nil, nil)
+	require.Equal(t, http.StatusOK, w.Code, "expected 200 on delete")
+
+	var resp map[string]any
+	err = json.Unmarshal(w.Body.Bytes(), &resp)
+	require.NoError(t, err, "failed to unmarshal response")
+
+	// Assert that needs_completion is true
+	needsCompletion, ok := resp["needs_completion"].(bool)
+	require.True(t, ok, "needs_completion field missing or not a bool")
+	require.True(t, needsCompletion, "needs_completion should be true")
 }

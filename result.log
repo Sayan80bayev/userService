@@ -10,19 +10,130 @@
 ?   	userService/internal/routes	[no test files]
 === RUN   TestUserService_UpdateUser
 === RUN   TestUserService_UpdateUser/successful_update
-=== RUN   TestUserService_UpdateUser/error_uploading_file
---- PASS: TestUserService_UpdateUser (0.00s)
-    --- PASS: TestUserService_UpdateUser/successful_update (0.00s)
-    --- PASS: TestUserService_UpdateUser/error_uploading_file (0.00s)
-=== RUN   TestUserService_DeleteUserById
---- PASS: TestUserService_DeleteUserById (0.00s)
-=== RUN   TestUserService_GetUserByUsername
---- PASS: TestUserService_GetUserByUsername (0.00s)
-=== RUN   TestUserService_GetUserById
---- PASS: TestUserService_GetUserById (0.00s)
-=== RUN   TestUserService_GetAllUsers
---- PASS: TestUserService_GetAllUsers (0.00s)
-PASS
-ok  	userService/internal/service	1.268s
+--- FAIL: TestUserService_UpdateUser (0.00s)
+    --- FAIL: TestUserService_UpdateUser/successful_update (0.00s)
+panic: 
+	
+	mock: Unexpected Method Call
+	-----------------------------
+	
+	Produce(string,events.UserUpdatedPayload)
+			0: "UserUpdated"
+			1: events.UserUpdatedPayload{UserID:uuid.UUID{0x13, 0xce, 0x8, 0xb, 0xa3, 0x6e, 0x43, 0xe2, 0x89, 0xcc, 0x1, 0xdd, 0xed, 0x2a, 0x8a, 0x21}, AvatarURL:"new.jpg", OldURL:"old.jpg"}
+	
+	The closest call I have is: 
+	
+	Produce(string,string)
+			0: "UserUpdate"
+			1: "mock.Anything"
+	
+	
+	Diff: 0: FAIL:  (string=UserUpdated) != (string=UserUpdate)
+		1: PASS:  (events.UserUpdatedPayload={13ce080b-a36e-43e2-89cc-01dded2a8a21 new.jpg old.jpg}) == (string=mock.Anything)
+	at: [/Users/sayanseksenbaev/Programming/go-project/services/userService/internal/service/user_service_test.go:108 /Users/sayanseksenbaev/Programming/go-project/services/userService/internal/service/user_service.go:95 /Users/sayanseksenbaev/Programming/go-project/services/userService/internal/service/user_service_test.go:170]
+	 [recovered]
+	panic: 
+	
+	mock: Unexpected Method Call
+	-----------------------------
+	
+	Produce(string,events.UserUpdatedPayload)
+			0: "UserUpdated"
+			1: events.UserUpdatedPayload{UserID:uuid.UUID{0x13, 0xce, 0x8, 0xb, 0xa3, 0x6e, 0x43, 0xe2, 0x89, 0xcc, 0x1, 0xdd, 0xed, 0x2a, 0x8a, 0x21}, AvatarURL:"new.jpg", OldURL:"old.jpg"}
+	
+	The closest call I have is: 
+	
+	Produce(string,string)
+			0: "UserUpdate"
+			1: "mock.Anything"
+	
+	
+	Diff: 0: FAIL:  (string=UserUpdated) != (string=UserUpdate)
+		1: PASS:  (events.UserUpdatedPayload={13ce080b-a36e-43e2-89cc-01dded2a8a21 new.jpg old.jpg}) == (string=mock.Anything)
+	at: [/Users/sayanseksenbaev/Programming/go-project/services/userService/internal/service/user_service_test.go:108 /Users/sayanseksenbaev/Programming/go-project/services/userService/internal/service/user_service.go:95 /Users/sayanseksenbaev/Programming/go-project/services/userService/internal/service/user_service_test.go:170]
+	
+
+goroutine 25 [running]:
+testing.tRunner.func1.2({0x1030540a0, 0x1400023e110})
+	/Users/sayanseksenbaev/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.24.6.darwin-arm64/src/testing/testing.go:1734 +0x1ac
+testing.tRunner.func1()
+	/Users/sayanseksenbaev/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.24.6.darwin-arm64/src/testing/testing.go:1737 +0x334
+panic({0x1030540a0?, 0x1400023e110?})
+	/Users/sayanseksenbaev/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.24.6.darwin-arm64/src/runtime/panic.go:792 +0x124
+github.com/stretchr/testify/mock.(*Mock).fail(0x140000cf310, {0x102eb210b?, 0x4?}, {0x140000cf360?, 0x2?, 0x2?})
+	/Users/sayanseksenbaev/go/pkg/mod/github.com/stretchr/testify@v1.10.0/mock/mock.go:349 +0x148
+github.com/stretchr/testify/mock.(*Mock).MethodCalled(0x140000cf310, {0x10315cafc, 0x7}, {0x140001726a0, 0x2, 0x2})
+	/Users/sayanseksenbaev/go/pkg/mod/github.com/stretchr/testify@v1.10.0/mock/mock.go:509 +0x500
+github.com/stretchr/testify/mock.(*Mock).Called(0x140000cf310, {0x140001726a0, 0x2, 0x2})
+	/Users/sayanseksenbaev/go/pkg/mod/github.com/stretchr/testify@v1.10.0/mock/mock.go:481 +0x110
+userService/internal/service.(*MockProducer).Produce(0x140000cf310, {0x102e99069, 0xb}, {0x1030a1480, 0x14000220c60})
+	/Users/sayanseksenbaev/Programming/go-project/services/userService/internal/service/user_service_test.go:108 +0xb4
+userService/internal/service.(*UserService).UpdateUser(0x140000fbf08, {{0x0, 0x0}, {0x102e95f6b, 0x7}, {0x102e94286, 0x5}, {0x102e98770, 0xa}, {0x0, ...}, ...}, ...)
+	/Users/sayanseksenbaev/Programming/go-project/services/userService/internal/service/user_service.go:95 +0x358
+userService/internal/service.TestUserService_UpdateUser.func3(0x1400008bdc0)
+	/Users/sayanseksenbaev/Programming/go-project/services/userService/internal/service/user_service_test.go:170 +0x134
+testing.tRunner(0x1400008bdc0, 0x1400009dae0)
+	/Users/sayanseksenbaev/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.24.6.darwin-arm64/src/testing/testing.go:1792 +0xe4
+created by testing.(*T).Run in goroutine 24
+	/Users/sayanseksenbaev/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.24.6.darwin-arm64/src/testing/testing.go:1851 +0x374
+FAIL	userService/internal/service	1.838s
 ?   	userService/internal/transfer/request	[no test files]
 ?   	userService/internal/transfer/response	[no test files]
+2025/08/25 17:32:57 github.com/testcontainers/testcontainers-go - Connected to docker: 
+  Server Version: 28.3.0
+  API Version: 1.50
+  Operating System: Docker Desktop
+  Total Memory: 3919 MB
+  Labels:
+    com.docker.desktop.address=unix:///Users/sayanseksenbaev/Library/Containers/com.docker.docker/Data/docker-cli.sock
+  Testcontainers for Go Version: v0.38.0
+  Resolved Docker Host: unix:///var/run/docker.sock
+  Resolved Docker Socket Path: /var/run/docker.sock
+  Test SessionID: 604796f3b73a69a7bd2d6f74a5566cbf30d5e466da673281227ca7dbbccd60f2
+  Test ProcessID: c933eb62-a95e-49be-b617-52f2ddcf6578
+2025/08/25 17:32:57 🐳 Creating container for image testcontainers/ryuk:0.12.0
+2025/08/25 17:32:57 ✅ Container created: 44cba696037f
+2025/08/25 17:32:57 🐳 Starting container: 44cba696037f
+2025/08/25 17:32:57 ✅ Container started: 44cba696037f
+2025/08/25 17:32:57 ⏳ Waiting for container id 44cba696037f image: testcontainers/ryuk:0.12.0. Waiting for: &{Port:8080/tcp timeout:<nil> PollInterval:100ms skipInternalCheck:false skipExternalCheck:false}
+2025/08/25 17:32:57 🔔 Container is ready: 44cba696037f
+2025/08/25 17:32:57 🐳 Creating container for image mongo:6.0
+2025/08/25 17:32:57 ✅ Container created: b9bfcea5c8dd
+2025/08/25 17:32:57 🐳 Starting container: b9bfcea5c8dd
+2025/08/25 17:32:58 ✅ Container started: b9bfcea5c8dd
+2025/08/25 17:32:58 ⏳ Waiting for container id b9bfcea5c8dd image: mongo:6.0. Waiting for: &{Port:27017/tcp timeout:<nil> PollInterval:100ms skipInternalCheck:false skipExternalCheck:false}
+2025/08/25 17:32:58 🔔 Container is ready: b9bfcea5c8dd
+2025/08/25 17:32:58 🐳 Creating container for image redis:7.0
+2025/08/25 17:32:58 ✅ Container created: 8d5ffaa4396d
+2025/08/25 17:32:58 🐳 Starting container: 8d5ffaa4396d
+2025/08/25 17:32:58 ✅ Container started: 8d5ffaa4396d
+2025/08/25 17:32:58 ⏳ Waiting for container id 8d5ffaa4396d image: redis:7.0. Waiting for: &{Port:6379/tcp timeout:<nil> PollInterval:100ms skipInternalCheck:false skipExternalCheck:false}
+2025/08/25 17:32:59 🔔 Container is ready: 8d5ffaa4396d
+2025/08/25 17:32:59 🐳 Creating container for image minio/minio:RELEASE.2025-04-22T22-12-26Z
+2025/08/25 17:32:59 ✅ Container created: 5e70dcb2f217
+2025/08/25 17:32:59 🐳 Starting container: 5e70dcb2f217
+2025/08/25 17:32:59 ✅ Container started: 5e70dcb2f217
+2025/08/25 17:32:59 ⏳ Waiting for container id 5e70dcb2f217 image: minio/minio:RELEASE.2025-04-22T22-12-26Z. Waiting for: &{timeout:<nil> Log:API: http:// IsRegexp:false Occurrence:1 PollInterval:100ms check:<nil> submatchCallback:<nil> re:<nil> log:[]}
+2025/08/25 17:32:59 🔔 Container is ready: 5e70dcb2f217
+2025/08/25 17:32:59 🐳 Creating container for image bitnami/kafka:3.6.1
+2025/08/25 17:32:59 ✅ Container created: e9f2e01a44ff
+2025/08/25 17:32:59 🐳 Starting container: e9f2e01a44ff
+2025/08/25 17:32:59 ✅ Container started: e9f2e01a44ff
+2025/08/25 17:32:59 ⏳ Waiting for container id e9f2e01a44ff image: bitnami/kafka:3.6.1. Waiting for: &{Port:9092/tcp timeout:0x140006801f0 PollInterval:100ms skipInternalCheck:false skipExternalCheck:false}
+2025/08/25 17:33:03 🔔 Container is ready: e9f2e01a44ff
+[32mINFO[0m Connected to MongoDB 2025-08-25 17:33:04
+[32mINFO[0m ✅ Connected to Redis at localhost:52695 (DB=0) 2025-08-25 17:33:04
+[32mINFO[0m Redis connected 2025-08-25 17:33:04
+[32mINFO[0m ✅ Successfully connected to MinIO 2025-08-25 17:33:04
+[32mINFO[0m Minio connected: bucket=test-bucket host=localhost 2025-08-25 17:33:04
+%3|1756125184.697|FAIL|rdkafka#producer-1| [thrd:localhost:9092/bootstrap]: localhost:9092/bootstrap: Connect to ipv6#[::1]:9092 failed: Connection refused (after 0ms in state CONNECT)
+[32mINFO[0m Kafka producer initialized for topic: user-events 2025-08-25 17:33:04
+[32mINFO[0m Kafka consumer initialized 2025-08-25 17:33:04
+=== RUN   TestUserLifecycle
+Waiting for user to become active 5 seconds
+%3|1756125185.703|FAIL|rdkafka#producer-1| [thrd:localhost:9092/bootstrap]: localhost:9092/bootstrap: Connect to ipv6#[::1]:9092 failed: Connection refused (after 1ms in state CONNECT, 1 identical error(s) suppressed)
+--- PASS: TestUserLifecycle (10.14s)
+PASS
+ok  	userService/tests/integration	19.641s
+?   	userService/tests/testutil	[no test files]
+FAIL

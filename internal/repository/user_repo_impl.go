@@ -55,7 +55,8 @@ func (r *MongoUserRepository) UpdateUser(user *model.User) error {
 		"deleted_at": bson.M{"$exists": false},
 	}
 	update := bson.M{"$set": bson.M{
-		"username":      user.Username,
+		"firstname":     user.Firstname,
+		"lastname":      user.Lastname,
 		"email":         user.Email,
 		"about":         user.About,
 		"date_of_birth": user.DateOfBirth,
@@ -116,22 +117,6 @@ func (r *MongoUserRepository) GetAllUsers() ([]model.User, error) {
 		return nil, err
 	}
 	return users, nil
-}
-
-// GetUserByUsername finds a non-deleted user by username.
-func (r *MongoUserRepository) GetUserByUsername(username string) (*model.User, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
-	defer cancel()
-
-	var user model.User
-	err := r.collection.FindOne(ctx, bson.M{
-		"username":   username,
-		"deleted_at": bson.M{"$exists": false},
-	}).Decode(&user)
-	if errors.Is(err, mongo.ErrNoDocuments) {
-		return nil, nil
-	}
-	return &user, err
 }
 
 // GetUserById finds a non-deleted user by ID.

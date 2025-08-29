@@ -9,9 +9,10 @@ const (
 )
 
 type UserCreatedPayload struct {
-	UserID   uuid.UUID `json:"user_id"`
-	Username string    `json:"username"`
-	Email    string    `json:"email"`
+	UserID    uuid.UUID `json:"user_id"`
+	Email     string    `json:"email"`
+	Firstname string    `json:"firstname"`
+	Lastname  string    `json:"lastname"`
 }
 type UserUpdatedPayload struct {
 	UserID    uuid.UUID `json:"user_id"`
