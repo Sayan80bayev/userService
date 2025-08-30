@@ -5,7 +5,7 @@ go 1.24.1
 toolchain go1.24.6
 
 require (
-	github.com/Sayan80bayev/go-project/pkg v0.0.0-20250825090959-7fa7727c4356
+	github.com/Sayan80bayev/go-project/pkg v0.0.0-20250830151331-dbbc73f7be45
 	github.com/gin-gonic/gin v1.10.0
 	github.com/google/uuid v1.6.0
 	github.com/redis/go-redis/v9 v9.7.3
@@ -28,7 +28,7 @@ require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/MicahParks/keyfunc/v2 v2.1.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
-	github.com/Sayan80bayev/go-project v0.0.0-20250824123416-eb6c58d57165 // indirect
+	github.com/Sayan80bayev/go-project v0.0.1 // indirect
 	github.com/bytedance/sonic v1.13.2 // indirect
 	github.com/bytedance/sonic/loader v0.2.4 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect

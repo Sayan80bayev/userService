@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
@@ -57,28 +58,28 @@ type MockUserRepository struct {
 	mock.Mock
 }
 
-func (m *MockUserRepository) CreateUser(user *model.User) error {
-	args := m.Called(user)
+func (m *MockUserRepository) CreateUser(ctx context.Context, user *model.User) error {
+	args := m.Called(ctx, user)
 	return args.Error(0)
 }
 
-func (m *MockUserRepository) UpdateUser(user *model.User) error {
-	args := m.Called(user)
+func (m *MockUserRepository) UpdateUser(ctx context.Context, user *model.User) error {
+	args := m.Called(ctx, user)
 	return args.Error(0)
 }
 
-func (m *MockUserRepository) DeleteUserById(userId uuid.UUID) error {
-	args := m.Called(userId)
+func (m *MockUserRepository) DeleteUserById(ctx context.Context, userId uuid.UUID) error {
+	args := m.Called(ctx, userId)
 	return args.Error(0)
 }
 
-func (m *MockUserRepository) GetAllUsers() ([]model.User, error) {
-	args := m.Called()
+func (m *MockUserRepository) GetAllUsers(ctx context.Context) ([]model.User, error) {
+	args := m.Called(ctx)
 	return args.Get(0).([]model.User), args.Error(1)
 }
 
-func (m *MockUserRepository) GetUserById(id uuid.UUID) (*model.User, error) {
-	args := m.Called(id)
+func (m *MockUserRepository) GetUserById(ctx context.Context, id uuid.UUID) (*model.User, error) {
+	args := m.Called(ctx, id)
 	return args.Get(0).(*model.User), args.Error(1)
 }
 
@@ -86,13 +87,13 @@ type MockFileService struct {
 	mock.Mock
 }
 
-func (m *MockFileService) DeleteFileByURL(fileURL string) error {
-	args := m.Called(fileURL)
+func (m *MockFileService) DeleteFileByURL(ctx context.Context, fileURL string) error {
+	args := m.Called(ctx, fileURL)
 	return args.Error(0)
 }
 
-func (m *MockFileService) UploadFile(file multipart.File, header *multipart.FileHeader) (string, error) {
-	args := m.Called(file, header)
+func (m *MockFileService) UploadFile(ctx context.Context, file multipart.File, header *multipart.FileHeader) (string, error) {
+	args := m.Called(ctx, file, header)
 	return args.String(0), args.Error(1)
 }
 
@@ -100,15 +101,14 @@ type MockProducer struct {
 	mock.Mock
 }
 
-func (m *MockProducer) Produce(topic string, event interface{}) error {
-	args := m.Called(topic, event)
+func (m *MockProducer) Produce(ctx context.Context, topic string, event interface{}) error {
+	args := m.Called(ctx, topic, event)
 	return args.Error(0)
 }
 
 func (m *MockProducer) Close() {}
 
 func TestUserService_UpdateUser(t *testing.T) {
-
 	avatarFile, avatarHeader, err := createMockFile()
 	if err != nil {
 		t.Fatalf("Failed to create mock file: %v", err)
@@ -117,18 +117,21 @@ func TestUserService_UpdateUser(t *testing.T) {
 	userUUID := uuid.New()
 	tests := []struct {
 		name          string
-		setupMocks    func(*MockUserRepository, *MockFileService, *MockProducer)
+		setupMocks    func(*MockUserRepository, *MockFileService, *MockProducer, *MockCacheService)
 		req           request.UserRequest
 		userID        uuid.UUID
 		expectedError string
 	}{
 		{
-			name: "successful update",
-			setupMocks: func(repo *MockUserRepository, fs *MockFileService, p *MockProducer) {
-				repo.On("GetUserById", userUUID).Return(&model.User{AvatarURL: "old.jpg"}, nil)
-				fs.On("UploadFile", mock.Anything, mock.Anything).Return("new.jpg", nil)
-				repo.On("UpdateUser", mock.Anything).Return(nil)
-				p.On("Produce", events.UserUpdated, mock.Anything).Return(nil)
+			name: "successful update with cache invalidation",
+			setupMocks: func(repo *MockUserRepository, fs *MockFileService, p *MockProducer, cache *MockCacheService) {
+				repo.On("GetUserById", mock.Anything, userUUID).Return(&model.User{AvatarURL: "old.jpg"}, nil)
+				fs.On("UploadFile", mock.Anything, mock.Anything, mock.Anything).Return("new.jpg", nil)
+				repo.On("UpdateUser", mock.Anything, mock.Anything).Return(nil)
+				p.On("Produce", mock.Anything, events.UserUpdated, mock.Anything).Return(nil)
+				// Expect cache invalidation
+				cacheKey := fmt.Sprintf("user:%s", userUUID.String())
+				cache.On("Delete", mock.Anything, cacheKey).Return(nil)
 			},
 			req: request.UserRequest{
 				Avatar:      avatarFile,
@@ -143,9 +146,10 @@ func TestUserService_UpdateUser(t *testing.T) {
 		},
 		{
 			name: "error uploading file",
-			setupMocks: func(repo *MockUserRepository, fs *MockFileService, p *MockProducer) {
-				repo.On("GetUserById", userUUID).Return(&model.User{}, nil)
-				fs.On("UploadFile", mock.Anything, mock.Anything).Return("", errors.New("upload error"))
+			setupMocks: func(repo *MockUserRepository, fs *MockFileService, p *MockProducer, cache *MockCacheService) {
+				repo.On("GetUserById", mock.Anything, userUUID).Return(&model.User{}, nil)
+				fs.On("UploadFile", mock.Anything, mock.Anything, mock.Anything).Return("", errors.New("upload error"))
+				// No cache delete expected in this case
 			},
 			req: request.UserRequest{
 				Avatar: avatarFile,
@@ -161,27 +165,40 @@ func TestUserService_UpdateUser(t *testing.T) {
 			repo := new(MockUserRepository)
 			fs := new(MockFileService)
 			p := new(MockProducer)
-			tt.setupMocks(repo, fs, p)
+			cache := new(MockCacheService)
 
-			svc := NewUserService(repo, fs, p, nil)
-			err := svc.UpdateUser(tt.req, tt.userID)
+			tt.setupMocks(repo, fs, p, cache)
+
+			svc := NewUserService(repo, fs, p, cache)
+			err = svc.UpdateUser(context.Background(), tt.req, tt.userID)
 
 			if tt.expectedError == "" {
 				assert.NoError(t, err)
 			} else {
 				assert.EqualError(t, err, tt.expectedError)
 			}
+
+			// Verify expectations on mocks
+			repo.AssertExpectations(t)
+			fs.AssertExpectations(t)
+			p.AssertExpectations(t)
+			cache.AssertExpectations(t)
 		})
 	}
 }
-
 func TestUserService_DeleteUserById(t *testing.T) {
 	userUUID := uuid.New()
 	repo := new(MockUserRepository)
-	repo.On("DeleteUserById", userUUID).Return(nil)
+	p := new(MockProducer)
+	cache := new(MockCacheService)
 
-	svc := NewUserService(repo, nil, nil, nil)
-	err := svc.DeleteUserById(userUUID)
+	repo.On("DeleteUserById", mock.Anything, userUUID).Return(nil)
+	p.On("Produce", mock.Anything, events.UserDeleted, mock.Anything).Return(nil)
+	cacheKey := fmt.Sprintf("user:%s", userUUID.String())
+	cache.On("Delete", mock.Anything, cacheKey).Return(nil)
+
+	svc := NewUserService(repo, nil, p, cache)
+	err := svc.DeleteUserById(context.Background(), userUUID)
 
 	assert.NoError(t, err)
 }
@@ -198,7 +215,7 @@ func TestUserService_GetUserById(t *testing.T) {
 		ID:        userUUID,
 		Firstname: "testuser",
 	}
-	repo.On("GetUserById", userUUID).Return(user, nil)
+	repo.On("GetUserById", mock.Anything, userUUID).Return(user, nil)
 
 	svc := NewUserService(repo, nil, nil, cache)
 	resp, err := svc.GetUserById(context.Background(), user.ID)
@@ -222,10 +239,10 @@ func TestUserService_GetAllUsers(t *testing.T) {
 			Firstname: "user2",
 		},
 	}
-	repo.On("GetAllUsers").Return(users, nil)
+	repo.On("GetAllUsers", mock.Anything).Return(users, nil)
 
 	svc := NewUserService(repo, nil, nil, nil)
-	resp, err := svc.GetAllUsers()
+	resp, err := svc.GetAllUsers(context.Background())
 
 	assert.NoError(t, err)
 	assert.Len(t, resp, 2)

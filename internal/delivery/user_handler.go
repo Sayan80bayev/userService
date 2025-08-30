@@ -88,7 +88,7 @@ func (h *UserHandler) UpdateUser(ctx *gin.Context) {
 		return
 	}
 
-	if err := h.service.UpdateUser(ur, userUUID); err != nil {
+	if err := h.service.UpdateUser(ctx.Request.Context(), ur, userUUID); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
 			"code":    "SERVER_ERROR",
@@ -126,7 +126,7 @@ func (h *UserHandler) DeleteUser(ctx *gin.Context) {
 		return
 	}
 
-	err := h.service.DeleteUserById(userID.(uuid.UUID))
+	err := h.service.DeleteUserById(ctx.Request.Context(), userID.(uuid.UUID))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
@@ -153,7 +153,7 @@ func (h *UserHandler) DeleteUser(ctx *gin.Context) {
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/users [get]
 func (h *UserHandler) GetAllUsers(ctx *gin.Context) {
-	users, err := h.service.GetAllUsers()
+	users, err := h.service.GetAllUsers(ctx.Request.Context())
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",

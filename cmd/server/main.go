@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github.com/Sayan80bayev/go-project/pkg/logging"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -25,7 +26,10 @@ func main() {
 	routes.SetupRoutes(r, c)
 
 	logger.Info("Server starting on port 8080")
-	go c.Consumer.Start()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go c.Consumer.Start(ctx)
 
 	err = r.Run(":" + c.Config.Port)
 	if err != nil {
@@ -34,5 +38,4 @@ func main() {
 	}
 
 	defer c.Consumer.Close()
-
 }

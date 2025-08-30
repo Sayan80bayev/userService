@@ -19,11 +19,11 @@ import (
 )
 
 type UserRepository interface {
-	CreateUser(user *model.User) error
-	UpdateUser(user *model.User) error
-	DeleteUserById(userId uuid.UUID) error
-	GetAllUsers() ([]model.User, error)
-	GetUserById(id uuid.UUID) (*model.User, error)
+	CreateUser(ctx context.Context, user *model.User) error
+	UpdateUser(ctx context.Context, user *model.User) error
+	DeleteUserById(ctx context.Context, userId uuid.UUID) error
+	GetAllUsers(ctx context.Context) ([]model.User, error)
+	GetUserById(ctx context.Context, id uuid.UUID) (*model.User, error)
 }
 
 type UserService struct {
@@ -49,32 +49,32 @@ func NewUserService(
 	}
 }
 
-func (s *UserService) UpdateUser(ur request.UserRequest, userID uuid.UUID) error {
-	u, err := s.userRepo.GetUserById(userID)
+func (s *UserService) UpdateUser(ctx context.Context, ur request.UserRequest, userID uuid.UUID) error {
+	u, err := s.userRepo.GetUserById(ctx, userID)
 	if err != nil {
 		return err
+	}
+	if u == nil {
+		return fmt.Errorf("user not found: %s", userID)
 	}
 
 	oldURL := u.AvatarURL
 
-	// Avatar
+	// Avatar update
 	if ur.Avatar != nil && ur.Header != nil {
-		if u.AvatarURL, err = s.fileStorage.UploadFile(ur.Avatar, ur.Header); err != nil {
+		if u.AvatarURL, err = s.fileStorage.UploadFile(ctx, ur.Avatar, ur.Header); err != nil {
 			return err
 		}
 	}
 
-	// Mandatory → always update
-	// NOTE: you can not update email
-	//u.Email = ur.Email
+	// Mandatory fields
 	u.Lastname = ur.Lastname
 	u.Firstname = ur.Firstname
 
-	// Optional → empty string or missing means remove
+	// Optional fields
 	u.About = ur.About
-
 	if ur.DateOfBirth == "" {
-		u.DateOfBirth = &time.Time{} // remove DOB
+		u.DateOfBirth = nil
 	} else {
 		dob, err := date.ParseDate(ur.DateOfBirth)
 		if err != nil {
@@ -82,25 +82,53 @@ func (s *UserService) UpdateUser(ur request.UserRequest, userID uuid.UUID) error
 		}
 		u.DateOfBirth = &dob
 	}
-
 	u.Gender = ur.Gender
 	u.Location = ur.Location
-	u.Socials = ur.Socials // if empty, means remove socials
+	u.Socials = ur.Socials
 
-	if err := s.userRepo.UpdateUser(u); err != nil {
-		logging.Instance.Error(err)
+	// Persist update
+	if err = s.userRepo.UpdateUser(ctx, u); err != nil {
+		logging.Instance.Errorf("failed to update user %s: %v", userID, err)
 		return err
 	}
 
-	return s.producer.Produce(events.UserUpdated, events.UserUpdatedPayload{
+	// Invalidate cache
+	cacheKey := fmt.Sprintf("user:%s", userID)
+	if err = s.cache.Delete(ctx, cacheKey); err != nil {
+		logging.Instance.Warnf("failed to invalidate cache for user %s: %v", userID, err)
+	}
+
+	// Publish event (non-blocking for DB update)
+	if err = s.producer.Produce(ctx, events.UserUpdated, events.UserUpdatedPayload{
 		UserID:    userID,
 		OldURL:    oldURL,
 		AvatarURL: u.AvatarURL,
-	})
+	}); err != nil {
+		logging.Instance.Errorf("failed to publish UserUpdated event for user %s: %v", userID, err)
+	}
+
+	return nil
 }
 
-func (s *UserService) DeleteUserById(userId uuid.UUID) error {
-	return s.userRepo.DeleteUserById(userId)
+func (s *UserService) DeleteUserById(ctx context.Context, userId uuid.UUID) error {
+	if err := s.userRepo.DeleteUserById(ctx, userId); err != nil {
+		return err
+	}
+
+	// Invalidate cache
+	cacheKey := fmt.Sprintf("user:%s", userId)
+	if err := s.cache.Delete(ctx, cacheKey); err != nil {
+		logging.Instance.Warnf("failed to invalidate cache for deleted user %s: %v", userId, err)
+	}
+
+	// Publish event (non-blocking for DB delete)
+	if err := s.producer.Produce(ctx, events.UserDeleted, events.UserDeletedPayload{
+		UserID: userId,
+	}); err != nil {
+		logging.Instance.Errorf("failed to publish UserDeleted event for user %s: %v", userId, err)
+	}
+
+	return nil
 }
 
 func (s *UserService) GetUserById(ctx context.Context, id uuid.UUID) (*response.UserResponse, error) {
@@ -112,11 +140,13 @@ func (s *UserService) GetUserById(ctx context.Context, id uuid.UUID) (*response.
 		if err := json.Unmarshal([]byte(cached), &ur); err == nil {
 			return &ur, nil
 		}
-		// if unmarshal fails, fall through to DB
+		logging.Instance.Warnf("failed to unmarshal cached user %s: %v", id, err)
+	} else if err != nil {
+		logging.Instance.Warnf("cache get failed for user %s: %v", id, err)
 	}
 
 	// 2. Cache miss → get from DB
-	user, err := s.userRepo.GetUserById(id)
+	user, err := s.userRepo.GetUserById(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -126,17 +156,21 @@ func (s *UserService) GetUserById(ctx context.Context, id uuid.UUID) (*response.
 
 	ur := s.mapper.Map(*user)
 
-	// 3. Store in cache with TTL (e.g. 10 minutes)
+	// 3. Store in cache with TTL
 	if data, err := json.Marshal(ur); err == nil {
-		_ = s.cache.Set(ctx, cacheKey, data, 10*time.Minute)
+		if err := s.cache.Set(ctx, cacheKey, data, 10*time.Minute); err != nil {
+			logging.Instance.Warnf("failed to set cache for user %s: %v", id, err)
+		}
+	} else {
+		logging.Instance.Warnf("failed to marshal user %s for cache: %v", id, err)
 	}
 
 	// 4. Return the user
 	return &ur, nil
 }
 
-func (s *UserService) GetAllUsers() ([]response.UserResponse, error) {
-	users, err := s.userRepo.GetAllUsers()
+func (s *UserService) GetAllUsers(ctx context.Context) ([]response.UserResponse, error) {
+	users, err := s.userRepo.GetAllUsers(ctx)
 	if err != nil {
 		return nil, err
 	}

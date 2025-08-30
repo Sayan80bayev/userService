@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"github.com/Sayan80bayev/go-project/pkg/logging"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,21 +15,16 @@ import (
 
 type MongoUserRepository struct {
 	collection *mongo.Collection
-	timeout    time.Duration
 }
 
 func NewUserRepository(db *mongo.Database) *MongoUserRepository {
 	return &MongoUserRepository{
 		collection: db.Collection("users"),
-		timeout:    5 * time.Second,
 	}
 }
 
 // CreateUser inserts a new user with CreatedAt and UpdatedAt timestamps.
-func (r *MongoUserRepository) CreateUser(user *model.User) error {
-	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
-	defer cancel()
-
+func (r *MongoUserRepository) CreateUser(ctx context.Context, user *model.User) error {
 	if user.ID == uuid.Nil {
 		user.ID = uuid.New()
 	}
@@ -44,10 +40,7 @@ func (r *MongoUserRepository) CreateUser(user *model.User) error {
 }
 
 // UpdateUser updates mutable fields and sets UpdatedAt timestamp.
-func (r *MongoUserRepository) UpdateUser(user *model.User) error {
-	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
-	defer cancel()
-
+func (r *MongoUserRepository) UpdateUser(ctx context.Context, user *model.User) error {
 	user.UpdatedAt = time.Now().UTC()
 
 	filter := bson.M{
@@ -78,15 +71,11 @@ func (r *MongoUserRepository) UpdateUser(user *model.User) error {
 }
 
 // DeleteUserById performs a soft delete by setting DeletedAt timestamp.
-func (r *MongoUserRepository) DeleteUserById(userId uuid.UUID) error {
-	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
-	defer cancel()
-
+func (r *MongoUserRepository) DeleteUserById(ctx context.Context, userId uuid.UUID) error {
 	filter := bson.M{
 		"_id":        userId,
 		"deleted_at": bson.M{"$exists": false},
 	}
-
 	update := bson.M{
 		"$set": bson.M{"deleted_at": time.Now().UTC()},
 	}
@@ -102,28 +91,29 @@ func (r *MongoUserRepository) DeleteUserById(userId uuid.UUID) error {
 }
 
 // GetAllUsers returns all non-deleted users.
-func (r *MongoUserRepository) GetAllUsers() ([]model.User, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
-	defer cancel()
-
+func (r *MongoUserRepository) GetAllUsers(ctx context.Context) ([]model.User, error) {
+	logger := logging.GetLogger()
 	cur, err := r.collection.Find(ctx, bson.M{"deleted_at": bson.M{"$exists": false}})
 	if err != nil {
 		return nil, err
 	}
-	defer cur.Close(ctx)
+
+	defer func(cur *mongo.Cursor, ctx context.Context) {
+		err = cur.Close(ctx)
+		if err != nil {
+			logger.Errorf("Couldn't close cursor: %v", err)
+		}
+	}(cur, ctx)
 
 	var users []model.User
-	if err := cur.All(ctx, &users); err != nil {
+	if err = cur.All(ctx, &users); err != nil {
 		return nil, err
 	}
 	return users, nil
 }
 
 // GetUserById finds a non-deleted user by ID.
-func (r *MongoUserRepository) GetUserById(id uuid.UUID) (*model.User, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
-	defer cancel()
-
+func (r *MongoUserRepository) GetUserById(ctx context.Context, id uuid.UUID) (*model.User, error) {
 	var user model.User
 	err := r.collection.FindOne(ctx, bson.M{
 		"_id": id,
