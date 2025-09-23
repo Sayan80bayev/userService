@@ -24,6 +24,7 @@ type Container struct {
 	Producer       messaging.Producer
 	Consumer       messaging.Consumer
 	UserRepository service.UserRepository
+	UserService    *service.UserService
 	Config         *config.Config
 	JWKSUrl        string
 }
@@ -58,6 +59,7 @@ func Init() (*Container, error) {
 	}
 
 	userRepository := repository.NewUserRepository(db)
+	userService := service.NewUserService(userRepository, fileStorage, producer, cacheService)
 
 	consumer, err := initKafkaConsumer(cfg, fileStorage, userRepository)
 	if err != nil {
@@ -78,6 +80,7 @@ func Init() (*Container, error) {
 		Config:         cfg,
 		JWKSUrl:        jwksURL,
 		UserRepository: userRepository,
+		UserService:    userService,
 	}, nil
 }
 

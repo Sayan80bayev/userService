@@ -9,6 +9,7 @@ type Config struct {
 	MongoURI    string `mapstructure:"MONGO_URI"`
 	MongoDBName string `mapstructure:"MONGO_DB_NAME"`
 	Port        string `mapstructure:"PORT"`
+	GrpcPort    string `mapstructure:"GRPC_PORT"`
 
 	AccessKey   string `mapstructure:"ACCESS_KEY"`
 	SecretKey   string `mapstructure:"SECRET_KEY"`
