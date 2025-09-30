@@ -17,6 +17,7 @@ import (
 	"testing"
 	"time"
 	"userService/internal/bootstrap"
+	"userService/internal/grpc"
 	"userService/internal/routes"
 	"userService/tests/testutil"
 
@@ -189,6 +190,7 @@ func TestMain(m *testing.M) {
 	go container.Consumer.Start(rootCtx)
 
 	// Setup gin + routes for testApp
+	grpc.SetupGRPCServer(container)
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	logger := logging.GetLogger()

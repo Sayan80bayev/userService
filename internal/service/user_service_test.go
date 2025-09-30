@@ -10,11 +10,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"mime/multipart"
+	"net/http"
 	"testing"
 	"time"
 	"userService/internal/events"
 	"userService/internal/model"
-	"userService/internal/transfer/request"
+	"userService/internal/transport/request"
 )
 
 type MockCacheService struct {
@@ -85,6 +86,11 @@ func (m *MockUserRepository) GetUserById(ctx context.Context, id uuid.UUID) (*mo
 
 type MockFileService struct {
 	mock.Mock
+}
+
+func (m *MockFileService) DownloadFile(w http.ResponseWriter, r *http.Request, fileURL string) error {
+	args := m.Called(w, r, fileURL)
+	return args.Error(0)
 }
 
 func (m *MockFileService) DeleteFileByURL(ctx context.Context, fileURL string) error {

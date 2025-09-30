@@ -18,15 +18,14 @@ import (
 
 // Container holds all dependencies
 type Container struct {
-	DB             *mongo.Database
-	Redis          caching.CacheService
-	FileStorage    storage.FileStorage
-	Producer       messaging.Producer
-	Consumer       messaging.Consumer
-	UserRepository service.UserRepository
-	UserService    *service.UserService
-	Config         *config.Config
-	JWKSUrl        string
+	DB          *mongo.Database
+	Redis       caching.CacheService
+	FileStorage storage.FileStorage
+	Producer    messaging.Producer
+	Consumer    messaging.Consumer
+	UserService *service.UserService
+	Config      *config.Config
+	JWKSUrl     string
 }
 
 // Init initializes all dependencies and returns a container
@@ -72,15 +71,14 @@ func Init() (*Container, error) {
 	// Wait for shutdown signal
 
 	return &Container{
-		DB:             db,
-		Redis:          cacheService,
-		FileStorage:    fileStorage,
-		Producer:       producer,
-		Consumer:       consumer,
-		Config:         cfg,
-		JWKSUrl:        jwksURL,
-		UserRepository: userRepository,
-		UserService:    userService,
+		DB:          db,
+		Redis:       cacheService,
+		FileStorage: fileStorage,
+		Producer:    producer,
+		Consumer:    consumer,
+		Config:      cfg,
+		JWKSUrl:     jwksURL,
+		UserService: userService,
 	}, nil
 }
 

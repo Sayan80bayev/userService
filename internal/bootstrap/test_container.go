@@ -5,10 +5,12 @@ import (
 	"github.com/Sayan80bayev/go-project/pkg/messaging"
 	"userService/internal/config"
 	"userService/internal/repository"
+	"userService/internal/service"
 )
 
 func NewTestContainer(mongoURI, kafkaAddr, minioHost, minioPort, redisAddr, jwksURL string) *Container {
 	cfg := &config.Config{
+		GrpcPort:            "50052",
 		MongoURI:            mongoURI,
 		MongoDBName:         "testdb",
 		RedisAddr:           redisAddr,
@@ -49,7 +51,7 @@ func NewTestContainer(mongoURI, kafkaAddr, minioHost, minioPort, redisAddr, jwks
 	}
 
 	userRepository := repository.NewUserRepository(db)
-
+	userService := service.NewUserService(userRepository, fs, producer, cacheService)
 	// Kafka Consumer
 	consumer, err := initKafkaConsumer(cfg, fs, userRepository)
 	if err != nil {
@@ -58,13 +60,13 @@ func NewTestContainer(mongoURI, kafkaAddr, minioHost, minioPort, redisAddr, jwks
 	// Use typed event constants
 
 	return &Container{
-		DB:             db,
-		Redis:          cacheService,
-		FileStorage:    fs,
-		Producer:       producer,
-		Consumer:       consumer,
-		UserRepository: userRepository,
-		Config:         cfg,
-		JWKSUrl:        jwksURL,
+		DB:          db,
+		Redis:       cacheService,
+		FileStorage: fs,
+		Producer:    producer,
+		Consumer:    consumer,
+		UserService: userService,
+		Config:      cfg,
+		JWKSUrl:     jwksURL,
 	}
 }

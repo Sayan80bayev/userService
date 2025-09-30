@@ -3,7 +3,7 @@ package mappers
 import (
 	"github.com/Sayan80bayev/go-project/pkg/mapper"
 	"userService/internal/model"
-	"userService/internal/transfer/response"
+	"userService/internal/transport/response"
 )
 
 type UserMapper struct {

@@ -14,8 +14,8 @@ import (
 	"userService/internal/events"
 	"userService/internal/mappers"
 	"userService/internal/model"
-	"userService/internal/transfer/request"
-	"userService/internal/transfer/response"
+	"userService/internal/transport/request"
+	"userService/internal/transport/response"
 )
 
 type UserRepository interface {

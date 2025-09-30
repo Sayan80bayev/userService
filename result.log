@@ -4,6 +4,7 @@
 ?   	userService/internal/config	[no test files]
 ?   	userService/internal/delivery	[no test files]
 ?   	userService/internal/events	[no test files]
+?   	userService/internal/grpc	[no test files]
 ?   	userService/internal/mappers	[no test files]
 ?   	userService/internal/model	[no test files]
 ?   	userService/internal/repository	[no test files]
@@ -17,15 +18,16 @@
 === RUN   TestUserService_DeleteUserById
 --- PASS: TestUserService_DeleteUserById (0.00s)
 === RUN   TestUserService_GetUserById
-[33mWARNING[0m cache get failed for user 7b0e6fdf-46d8-41f9-9db8-7eb95495152b: cache miss 2025-09-11 23:01:11
+[33mWARNING[0m cache get failed for user 139a88a8-27ed-4208-bcd9-8026def8cf29: cache miss 2025-09-23 20:53:36
 --- PASS: TestUserService_GetUserById (0.00s)
 === RUN   TestUserService_GetAllUsers
 --- PASS: TestUserService_GetAllUsers (0.00s)
 PASS
-ok  	userService/internal/service	1.740s
+ok  	userService/internal/service	0.786s
 ?   	userService/internal/transfer/request	[no test files]
 ?   	userService/internal/transfer/response	[no test files]
-2025/09/11 23:01:12 github.com/testcontainers/testcontainers-go - Connected to docker: 
+?   	userService/proto	[no test files]
+2025/09/23 20:53:37 github.com/testcontainers/testcontainers-go - Connected to docker: 
   Server Version: 28.3.0
   API Version: 1.50
   Operating System: Docker Desktop
@@ -35,50 +37,78 @@ ok  	userService/internal/service	1.740s
   Testcontainers for Go Version: v0.38.0
   Resolved Docker Host: unix:///var/run/docker.sock
   Resolved Docker Socket Path: /var/run/docker.sock
-  Test SessionID: 9576f648bc4880369158d7b8bf77afb71e2bf12018748102e718c3f4287f5040
-  Test ProcessID: cace1eda-b20a-4a2d-af23-c5812851315c
-2025/09/11 23:01:12 🐳 Creating container for image testcontainers/ryuk:0.12.0
-2025/09/11 23:01:12 ✅ Container created: 79e3efb9d20e
-2025/09/11 23:01:12 🐳 Starting container: 79e3efb9d20e
-2025/09/11 23:01:12 ✅ Container started: 79e3efb9d20e
-2025/09/11 23:01:12 ⏳ Waiting for container id 79e3efb9d20e image: testcontainers/ryuk:0.12.0. Waiting for: &{Port:8080/tcp timeout:<nil> PollInterval:100ms skipInternalCheck:false skipExternalCheck:false}
-2025/09/11 23:01:12 🔔 Container is ready: 79e3efb9d20e
-2025/09/11 23:01:12 🐳 Creating container for image mongo:6.0
-2025/09/11 23:01:12 ✅ Container created: 223ea20adb07
-2025/09/11 23:01:12 🐳 Starting container: 223ea20adb07
-2025/09/11 23:01:12 ✅ Container started: 223ea20adb07
-2025/09/11 23:01:12 ⏳ Waiting for container id 223ea20adb07 image: mongo:6.0. Waiting for: &{Port:27017/tcp timeout:<nil> PollInterval:100ms skipInternalCheck:false skipExternalCheck:false}
-2025/09/11 23:01:13 🔔 Container is ready: 223ea20adb07
-2025/09/11 23:01:13 🐳 Creating container for image redis:7.0
-2025/09/11 23:01:13 ✅ Container created: bc51ea7d9f8b
-2025/09/11 23:01:13 🐳 Starting container: bc51ea7d9f8b
-2025/09/11 23:01:14 ✅ Container started: bc51ea7d9f8b
-2025/09/11 23:01:14 ⏳ Waiting for container id bc51ea7d9f8b image: redis:7.0. Waiting for: &{Port:6379/tcp timeout:<nil> PollInterval:100ms skipInternalCheck:false skipExternalCheck:false}
-2025/09/11 23:01:14 🔔 Container is ready: bc51ea7d9f8b
-2025/09/11 23:01:14 🐳 Creating container for image minio/minio:RELEASE.2025-04-22T22-12-26Z
-2025/09/11 23:01:14 ✅ Container created: af2011888b8a
-2025/09/11 23:01:14 🐳 Starting container: af2011888b8a
-2025/09/11 23:01:14 ✅ Container started: af2011888b8a
-2025/09/11 23:01:14 ⏳ Waiting for container id af2011888b8a image: minio/minio:RELEASE.2025-04-22T22-12-26Z. Waiting for: &{timeout:<nil> Log:API: http:// IsRegexp:false Occurrence:1 PollInterval:100ms check:<nil> submatchCallback:<nil> re:<nil> log:[]}
-2025/09/11 23:01:15 🔔 Container is ready: af2011888b8a
-2025/09/11 23:01:15 🐳 Creating container for image bitnami/kafka:3.6.1
-2025/09/11 23:01:15 ✅ Container created: 67bcc67a5ec7
-2025/09/11 23:01:15 🐳 Starting container: 67bcc67a5ec7
-2025/09/11 23:01:15 Failed to remove network: Error response from daemon: error while removing network: network 85617a1e-2665-480c-bdd7-2f57e5817b2b has active endpoints (name:"charming_turing" id:"de111ded12be", name:"mystifying_ptolemy" id:"06ae790a3d89")
-panic: runtime error: invalid memory address or nil pointer dereference
-[signal SIGSEGV: segmentation violation code=0x2 addr=0x18 pc=0x1046794dc]
+  Test SessionID: cd5c8c90816443afb4b58f6b5467d6df777fb708e7181762124a7a17ab490539
+  Test ProcessID: fb9a2d67-8043-4cb8-bab3-a8f98ecaea33
+2025/09/23 20:53:37 🐳 Creating container for image testcontainers/ryuk:0.12.0
+2025/09/23 20:53:37 ✅ Container created: 99ed8eca8d3f
+2025/09/23 20:53:37 🐳 Starting container: 99ed8eca8d3f
+2025/09/23 20:53:37 ✅ Container started: 99ed8eca8d3f
+2025/09/23 20:53:37 ⏳ Waiting for container id 99ed8eca8d3f image: testcontainers/ryuk:0.12.0. Waiting for: &{Port:8080/tcp timeout:<nil> PollInterval:100ms skipInternalCheck:false skipExternalCheck:false}
+2025/09/23 20:53:37 🔔 Container is ready: 99ed8eca8d3f
+2025/09/23 20:53:37 🐳 Creating container for image mongo:6.0
+2025/09/23 20:53:37 ✅ Container created: e1fc5559336a
+2025/09/23 20:53:37 🐳 Starting container: e1fc5559336a
+2025/09/23 20:53:37 ✅ Container started: e1fc5559336a
+2025/09/23 20:53:37 ⏳ Waiting for container id e1fc5559336a image: mongo:6.0. Waiting for: &{Port:27017/tcp timeout:<nil> PollInterval:100ms skipInternalCheck:false skipExternalCheck:false}
+2025/09/23 20:53:38 🔔 Container is ready: e1fc5559336a
+2025/09/23 20:53:38 🐳 Creating container for image redis:7.0
+2025/09/23 20:53:38 ✅ Container created: 9e49b6a38bd7
+2025/09/23 20:53:38 🐳 Starting container: 9e49b6a38bd7
+2025/09/23 20:53:38 ✅ Container started: 9e49b6a38bd7
+2025/09/23 20:53:38 ⏳ Waiting for container id 9e49b6a38bd7 image: redis:7.0. Waiting for: &{Port:6379/tcp timeout:<nil> PollInterval:100ms skipInternalCheck:false skipExternalCheck:false}
+2025/09/23 20:53:38 🔔 Container is ready: 9e49b6a38bd7
+2025/09/23 20:53:38 🐳 Creating container for image minio/minio:RELEASE.2025-04-22T22-12-26Z
+2025/09/23 20:53:38 ✅ Container created: f80ebb332892
+2025/09/23 20:53:38 🐳 Starting container: f80ebb332892
+2025/09/23 20:53:39 ✅ Container started: f80ebb332892
+2025/09/23 20:53:39 ⏳ Waiting for container id f80ebb332892 image: minio/minio:RELEASE.2025-04-22T22-12-26Z. Waiting for: &{timeout:<nil> Log:API: http:// IsRegexp:false Occurrence:1 PollInterval:100ms check:<nil> submatchCallback:<nil> re:<nil> log:[]}
+2025/09/23 20:53:39 🔔 Container is ready: f80ebb332892
+2025/09/23 20:53:39 🐳 Creating container for image bitnami/kafka:3.6.1
+2025/09/23 20:53:39 ✅ Container created: 666c43247634
+2025/09/23 20:53:39 🐳 Starting container: 666c43247634
+2025/09/23 20:53:39 ✅ Container started: 666c43247634
+2025/09/23 20:53:39 ⏳ Waiting for container id 666c43247634 image: bitnami/kafka:3.6.1. Waiting for: &{Port:9092/tcp timeout:0x140004eb1a0 PollInterval:100ms skipInternalCheck:false skipExternalCheck:false}
+2025/09/23 20:53:43 🔔 Container is ready: 666c43247634
+[32mINFO[0m Connected to MongoDB 2025-09-23 20:53:45
+[32mINFO[0m ✅ Connected to Redis at localhost:58958 (DB=0) 2025-09-23 20:53:45
+[32mINFO[0m Redis connected 2025-09-23 20:53:45
+[32mINFO[0m ✅ Successfully connected to MinIO 2025-09-23 20:53:45
+[32mINFO[0m Minio connected: bucket=test-bucket host=localhost 2025-09-23 20:53:45
+%3|1758642825.148|FAIL|rdkafka#producer-1| [thrd:localhost:9092/bootstrap]: localhost:9092/bootstrap: Connect to ipv6#[::1]:9092 failed: Connection refused (after 0ms in state CONNECT)
+[32mINFO[0m Kafka producer initialized for topic: user-events 2025-09-23 20:53:45
+[32mINFO[0m Kafka consumer initialized 2025-09-23 20:53:45
+=== RUN   TestUserLifecycle
+Waiting briefly for consumer to pick up event
+--- FAIL: TestUserLifecycle (5.00s)
+panic: runtime error: invalid memory address or nil pointer dereference [recovered]
+	panic: runtime error: invalid memory address or nil pointer dereference
+[signal SIGSEGV: segmentation violation code=0x2 addr=0x0 pc=0x10545b920]
 
-goroutine 1 [running]:
-github.com/stretchr/testify/assert.Fail({0x0, 0x0}, {0x140005ea140, 0x13d}, {0x0, 0x0, 0x0})
-	/Users/sayanseksenbaev/go/pkg/mod/github.com/stretchr/testify@v1.10.0/assert/assertions.go:369 +0x2cc
-github.com/stretchr/testify/assert.NoError({0x0, 0x0}, {0x105163620, 0x14000419540}, {0x0, 0x0, 0x0})
-	/Users/sayanseksenbaev/go/pkg/mod/github.com/stretchr/testify@v1.10.0/assert/assertions.go:1586 +0x100
-github.com/stretchr/testify/require.NoError({0x0, 0x0}, {0x105163620, 0x14000419540}, {0x0, 0x0, 0x0})
-	/Users/sayanseksenbaev/go/pkg/mod/github.com/stretchr/testify@v1.10.0/require/require.go:1354 +0xac
-userService/tests/integration.TestMain(0x1400035dc20)
-	/Users/sayanseksenbaev/Programming/go-project/services/userService/tests/integration/main_test.go:160 +0x1114
-main.main()
-	_testmain.go:49 +0x98
-FAIL	userService/tests/integration	5.181s
+goroutine 367 [running]:
+testing.tRunner.func1.2({0x105b9b780, 0x106293390})
+	/Users/sayanseksenbaev/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.24.6.darwin-arm64/src/testing/testing.go:1734 +0x1ac
+testing.tRunner.func1()
+	/Users/sayanseksenbaev/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.24.6.darwin-arm64/src/testing/testing.go:1737 +0x334
+panic({0x105b9b780?, 0x106293390?})
+	/Users/sayanseksenbaev/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.24.6.darwin-arm64/src/runtime/panic.go:792 +0x124
+userService/internal/service.(*UserService).GetUserById(0x0, {0x105cf3508, 0x1062fbd40}, {0x4e, 0x6e, 0xcd, 0xa1, 0xed, 0x93, 0x48, ...})
+	/Users/sayanseksenbaev/Programming/go-project/services/userService/internal/service/user_service.go:138 +0xc0
+userService/internal/delivery.(*UserHandler).GetUserById(0x1400013c020, 0x1400012c000)
+	/Users/sayanseksenbaev/Programming/go-project/services/userService/internal/delivery/user_handler.go:193 +0x2a8
+github.com/gin-gonic/gin.(*Context).Next(...)
+	/Users/sayanseksenbaev/go/pkg/mod/github.com/gin-gonic/gin@v1.10.0/context.go:185
+github.com/gin-gonic/gin.(*Engine).handleHTTPRequest(0x1400028a9c0, 0x1400012c000)
+	/Users/sayanseksenbaev/go/pkg/mod/github.com/gin-gonic/gin@v1.10.0/gin.go:633 +0x6c4
+github.com/gin-gonic/gin.(*Engine).ServeHTTP(0x1400028a9c0, {0x105cf18f8, 0x1400043a000}, 0x140002d6140)
+	/Users/sayanseksenbaev/go/pkg/mod/github.com/gin-gonic/gin@v1.10.0/gin.go:589 +0x170
+userService/tests/integration.doRequest(0x105874ec7?, {0x1058618c7?, 0x140003c3e08?}, {0x14000452040?, 0x1?}, {0x0?, 0x0?}, 0x0)
+	/Users/sayanseksenbaev/Programming/go-project/services/userService/tests/integration/user_lifecycle_test.go:28 +0x1f8
+userService/tests/integration.TestUserLifecycle(0x14000582fc0)
+	/Users/sayanseksenbaev/Programming/go-project/services/userService/tests/integration/user_lifecycle_test.go:56 +0x2a0
+testing.tRunner(0x14000582fc0, 0x105ce3e00)
+	/Users/sayanseksenbaev/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.24.6.darwin-arm64/src/testing/testing.go:1792 +0xe4
+created by testing.(*T).Run in goroutine 1
+	/Users/sayanseksenbaev/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.24.6.darwin-arm64/src/testing/testing.go:1851 +0x374
+FAIL	userService/tests/integration	13.987s
 ?   	userService/tests/testutil	[no test files]
 FAIL

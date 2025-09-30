@@ -1,9 +1,9 @@
 package grpc
 
 import (
+	userpb "github.com/Sayan80bayev/go-project/pkg/proto/user"
 	"net"
 	"userService/internal/bootstrap"
-	userpb "userService/proto"
 
 	"github.com/Sayan80bayev/go-project/pkg/logging"
 	"google.golang.org/grpc"

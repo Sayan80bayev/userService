@@ -4,9 +4,9 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/timestamppb"
-
 	"userService/internal/service"
-	userpb "userService/proto"
+
+	userpb "github.com/Sayan80bayev/go-project/pkg/proto/user"
 )
 
 // UserHandler implements the gRPC UserServiceServer interface

@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"net/http"
 	"userService/internal/service"
-	"userService/internal/transfer/request"
+	"userService/internal/transport/request"
 )
 
 type UserHandler struct {
